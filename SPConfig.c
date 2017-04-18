@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <malloc.h>
 #include <limits.h>
 #include <assert.h>
@@ -50,6 +51,7 @@ struct sp_config_t{
 	bool spMinimalGUI;				// 					default false
 	int spLoggerLevel;				// in {1,2,3,4}		default 3
 	char spLoggerFilename[1024];	// no spaces		default stdout (NULL)
+	//TODO 1024 -> 1025 -> CONST
 };
 
 /*

@@ -215,7 +215,7 @@ void spSaveFeaturesFile(int index, SPPoint** feats, int numOfFeatures, const SPC
 
 	// open features file
 	FILE* featsFile = fopen(filename, "w");
-	if (featsFile == NULL) {
+	if (!featsFile) {
 		sprintf(msg,ERRORMSG_FEATS_SAVE_OPEN,filename);
 		spLoggerPrintWarning(msg,__FILE__,__func__,__LINE__);
 		return;
@@ -252,7 +252,7 @@ SPPoint*** spPreprocessing(int** NOFptr, const SPConfig config) {
 	SP_CONFIG_MSG configMsg;
 	int numOfImages = spConfigGetNumOfImages(config, &configMsg);
 	SPPoint*** featsDB = (SPPoint***) malloc(numOfImages*sizeof(SPPoint**));
-	if (featsDB == NULL) {
+	if (!featsDB) {
 		spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ - 2);
 		return NULL;
 	}
@@ -260,7 +260,7 @@ SPPoint*** spPreprocessing(int** NOFptr, const SPConfig config) {
 	// allocate numOfFeatures DB
 	char imagePath[1024];
 	int* numOfFeatures = (int*) malloc(numOfImages * sizeof(int));
-	if (numOfFeatures == NULL) {
+	if (!numOfFeatures) {
 		spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ - 2);
 		free(featsDB);
 		return NULL;
@@ -273,7 +273,12 @@ SPPoint*** spPreprocessing(int** NOFptr, const SPConfig config) {
 		if (spConfigIsExtractionMode(config, &configMsg)) {
 			spConfigGetImagePath(imagePath, config, i);
 			numOfFeatures[i] = spConfigGetNumOfFeatures(config, &configMsg);
-			featsDB[i] = imageProc.getImageFeatures(imagePath, i, numOfFeatures + i);
+			try { // c++ code here because imageProc.getImageFeatures throws exceptions
+				featsDB[i] = imageProc.getImageFeatures(imagePath, i, numOfFeatures + i);
+			} catch (...) {
+				// TODO: print error
+				featsDB[i] = NULL;
+			}
 			spSaveFeaturesFile(i, featsDB[i], numOfFeatures[i], config);
 		}
 
@@ -282,7 +287,7 @@ SPPoint*** spPreprocessing(int** NOFptr, const SPConfig config) {
 			featsDB[i] = spLoadFeaturesFile(i, numOfFeatures + i, config);
 
 		// failed extracting / loading
-		if (featsDB[i] == NULL) {
+		if (!featsDB[i]) {
 			sprintf(msg,ERRORMSG_FEATS_GET,i);
 			spLoggerPrintError(msg, __FILE__, __func__, __LINE__);
 			destroySPPoint2D(featsDB, i+1, numOfFeatures);
