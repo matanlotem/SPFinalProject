@@ -116,3 +116,4 @@ int* spKDArrayGetIndicesByDim(SPKDArray* kdA, int dim);
 void spKDArrayDestroy(SPKDArray* kdA);
 
 #endif // SPKDARRAY_H_INCLUDED
+
