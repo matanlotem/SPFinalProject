@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <limits.h>
@@ -10,11 +11,6 @@
 
 const char* IMAGES_PREFIX_VAL[] = SP_CONFIG_CONSTRAINT_IMAGES_PREFIX_VAL;
 
-typedef enum kd_method {
-	RANDOM,
-	MAX_SPREAD,
-	INCREMENTAL
-} KD_METHOD;
 
 struct sp_config_t{
 	char spImagesDirectory[STR_LEN];	// no spaces
@@ -364,6 +360,19 @@ int spConfigGetNumOfFeatures(const SPConfig config, SP_CONFIG_MSG* msg) {
 int spConfigGetPCADim(const SPConfig config, SP_CONFIG_MSG* msg) {
 	if (spConfigValidate(config, msg))
 		return config->spPCADimension;
+	return -1;
+}
+
+KD_METHOD spConfigGetKDSplitMethod(const SPConfig config, SP_CONFIG_MSG* msg) {
+	if (spConfigValidate(config, msg))
+		return config->spKDTreeSplitMethod;
+	// return default method if fails
+	return SP_CONFIG_DEFAULT_KD_TREE_SPLIT_METHOD;
+}
+
+int spConfigGetKNN(const SPConfig config, SP_CONFIG_MSG* msg) {
+	if (spConfigValidate(config, msg))
+		return config->spKNN;
 	return -1;
 }
 
