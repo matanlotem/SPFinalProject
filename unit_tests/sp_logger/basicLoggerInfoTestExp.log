@@ -10,9 +10,4 @@
 - message: MSGB
 ---INFO---
 - message: MSGC
----DEBUG---
-- file: sp_logger_unit_test.c
-- function: basicLoggerLevelTest
-- line: 4
-- message: MSGD
 MSGE

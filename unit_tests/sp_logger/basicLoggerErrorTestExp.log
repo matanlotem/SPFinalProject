@@ -1,5 +1,6 @@
 ---ERROR---
 - file: sp_logger_unit_test.c
-- function: basicLoggerErrorTest
-- line: 50
+- function: basicLoggerLevelTest
+- line: 1
 - message: MSGA
+MSGE

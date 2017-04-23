@@ -1,36 +1,14 @@
-extern "C" {
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 #include "main_aux.h"
+
+/*
+ * returns true if the strings match
+ */
+bool streq(const char* str1, const char* str2) {
+	return (strcmp(str1, str2) == 0);
 }
-
-#include "SPImageProc.h"
-
-#define CONFIG_DEFAULT_FILE "spcbir.config"
-
-#define ERRORMSG_CONFIG "Config file not defined"
-#define ERRORMSG_UNKOWN "Unkown error!"
-#define ERRORMSG_ALLOCATION "Allocation error"
-
-#define ERRORMSG_INIT_USAGE "Invalid command line : use -c <config_filename>"
-#define ERRORMSG_CONFIG_FILE "The configuration file %s could not be opened"
-#define ERRORMSG_CONFIG_DEFAULT "The default configuration file %s could not be opened"
-#define ERRORMSG_INIT_LOGGER "Failed initializing logger"
-
-#define ERRORMSG_FEATS_LOAD_NOF "Invalid number of features"
-#define ERRORMSG_FEATS_LOAD_OPEN "Could not open %s features file for reading"
-#define ERRORMSG_FEATS_LOAD_FRMT "File format does not match number of features and PCA dimension"
-#define INFOMSG_FEATS_LOAD_SUCCESS "Successfully loaded image %d features file"
-
-#define ERRORMSG_FEATS_SAVE_NULL "Cannot save NULL features"
-#define ERRORMSG_FEATS_INDEX "Index %d out of range"
-#define ERRORMSG_FEATS_SAVE_OPEN "Could not open %s features file for writing"
-#define INFOMSG_FEATS_SAVE_SUCCESS "Successfully saved image %d features file"
-
-#define ERRORMSG_FEATS_GET "Failed extracting/loading image %d features"
-#define INFOMSG_START_PRE "Starting preprocessing"
-#define INFOMSG_DONE_PRE "Done preprocessing"
 
 
 SPConfig spInit(int argc, char* argv[]) {
@@ -41,8 +19,8 @@ SPConfig spInit(int argc, char* argv[]) {
 	}
 
 	/*** parse arguments and load configuration file ***/
-	char configFile[1024];
-	char msg[1024];
+	char configFile[STR_LEN];
+	char msg[STR_LEN];
 	if (argc == 1) { // no config file passed
 		strcpy(configFile,CONFIG_DEFAULT_FILE);
 		sprintf(msg, ERRORMSG_CONFIG_DEFAULT, configFile);
@@ -94,31 +72,27 @@ void destroySPPoint2D(SPPoint ***DB, int dim, int *dim2) {
 	 * Assumes given array dimensions are correct
 	 * Frees dim2 as well
 	 */
-	assert(DB != NULL && dim2 == NULL);
-	if (DB != NULL) {
+	assert(!DB || dim2);
+	if (DB) {
 		for (int i=0; i<dim; i++)
 			destroySPPoint1D(DB[i],dim2[i]);
 		free(DB);
 	}
-	if (dim2 != NULL) free(dim2);
+	if (dim2) free(dim2);
 }
 
 
 SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig config) {
 	// validate parameters
-	if (numOfFeatures == NULL) {
-		spLoggerPrintWarning(ERRORMSG_FEATS_LOAD_NOF,__FILE__,__func__,__LINE__);
-		return NULL;
-	}
-	if (config == NULL) {
-		spLoggerPrintWarning(ERRORMSG_CONFIG,__FILE__,__func__,__LINE__);
+	if (!numOfFeatures || !config) {
+		spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
 		return NULL;
 	}
 
 	// get features file filename
 	SP_CONFIG_MSG configMsg;
-	char msg[1024];
-	char filename[1024];
+	char msg[STR_LEN];
+	char filename[STR_LEN];
 	configMsg = spConfigGetFeaturesPath(filename, config, index);
 	if (configMsg != SP_CONFIG_SUCCESS) {
 		if (configMsg == SP_CONFIG_INDEX_OUT_OF_RANGE)
@@ -131,7 +105,7 @@ SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig confi
 
 	// open features file
 	FILE* featsFile = fopen(filename, "r");
-	if (featsFile == NULL) {
+	if (!featsFile) {
 		sprintf(msg,ERRORMSG_FEATS_LOAD_OPEN,filename);
 		spLoggerPrintWarning(msg,__FILE__,__func__,__LINE__);
 		return NULL;
@@ -139,6 +113,9 @@ SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig confi
 
 	// allocate featutres
 	fscanf(featsFile,"%d\n", numOfFeatures);
+	sprintf(msg, "expected number of features: %d", *numOfFeatures);
+	spLoggerPrintDebug(msg,__FILE__,__func__,__LINE__);
+
 	SPPoint** feats = (SPPoint**) malloc(sizeof(*feats) * *numOfFeatures);
 	if (!feats) {
 		spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ - 2);
@@ -147,7 +124,7 @@ SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig confi
 	}
 
 	// allocate feature temporary array
-	int PCADim = spConfigGetPCADim(config, &configMsg);
+	int PCADim = spConfigGetPCADim(config, &configMsg); // ###no msg validation
 	double* arr = (double*) malloc(sizeof(double) * PCADim);
 	if (!arr) {
 		spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ - 2);
@@ -158,7 +135,7 @@ SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig confi
 
 	// read features data from file
 	int i=0, j=0;
-	while (fscanf(featsFile,"%lf ", arr + (j++))) {
+	while (fscanf(featsFile,"%lf ", arr + (j++))>0) {
 		if (j == PCADim) {
 			if (i++ >= *numOfFeatures) break; // overflow
 			feats[i-1] = spPointCreate(arr,PCADim,index);
@@ -169,7 +146,10 @@ SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig confi
 	free(arr);
 
 	// to many or not enough data values
-	if (i != *numOfFeatures || j != 0) {
+	sprintf(msg, "loaded number of features: %d", i);
+	spLoggerPrintDebug(msg,__FILE__,__func__,__LINE__);
+
+	if (i != *numOfFeatures || j != 1) {
 		spLoggerPrintError(ERRORMSG_FEATS_LOAD_FRMT,__FILE__,__func__,__LINE__);
 		destroySPPoint1D(feats, *numOfFeatures);
 		return NULL;
@@ -190,19 +170,15 @@ SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig confi
  */
 void spSaveFeaturesFile(int index, SPPoint** feats, int numOfFeatures, const SPConfig config) {
 	// validate parameters
-	if (feats == NULL) {
-		spLoggerPrintWarning(ERRORMSG_FEATS_SAVE_NULL,__FILE__,__func__,__LINE__);
-		return;
-	}
-	if (config == NULL) {
-		spLoggerPrintWarning(ERRORMSG_CONFIG,__FILE__,__func__,__LINE__);
+	if (!feats || !config) {
+		spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
 		return;
 	}
 
 	// get features file filename
 	SP_CONFIG_MSG configMsg;
-	char msg[1024];
-	char filename[1024];
+	char msg[STR_LEN];
+	char filename[STR_LEN];
 	configMsg = spConfigGetFeaturesPath(filename, config, index);
 	if (configMsg != SP_CONFIG_SUCCESS) {
 		if (configMsg == SP_CONFIG_INDEX_OUT_OF_RANGE)
@@ -222,7 +198,7 @@ void spSaveFeaturesFile(int index, SPPoint** feats, int numOfFeatures, const SPC
 	}
 
 	// write features data to file
-	int PCADim = spConfigGetPCADim(config, &configMsg);
+	int PCADim = spConfigGetPCADim(config, &configMsg); // ###no msg validation
 	fprintf(featsFile,"%d\n", numOfFeatures);
 	for (int i=0; i<numOfFeatures; i++) {
 		for (int j=0; j<PCADim; j++)
@@ -235,22 +211,27 @@ void spSaveFeaturesFile(int index, SPPoint** feats, int numOfFeatures, const SPC
 	// success message
 	sprintf(msg, INFOMSG_FEATS_SAVE_SUCCESS, index);
 	spLoggerPrintInfo(msg);
-
 }
 
-SPPoint*** spPreprocessing(int** NOFptr, const SPConfig config) {
-	// validate config file
-	if (config == NULL) {
-		spLoggerPrintError(ERRORMSG_CONFIG, __FILE__, __func__, __LINE__);
+SPPoint*** spPreprocessing(int** NOFptr, sp::ImageProc imageProc, const SPConfig config) {
+	// validate parameters
+	if (!NOFptr || !config) {
+		spLoggerPrintError(ERRORMSG_NULL_ARGS, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
 
 	spLoggerPrintInfo(INFOMSG_START_PRE);
-	char msg[1024];
+	char msg[STR_LEN];
+	SP_CONFIG_MSG configMsg;
+
+	// get number of images
+	int numOfImages = spConfigGetNumOfImages(config, &configMsg);
+	if (configMsg != SP_CONFIG_SUCCESS) {
+		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
 
 	// allocate features DB
-	SP_CONFIG_MSG configMsg;
-	int numOfImages = spConfigGetNumOfImages(config, &configMsg);
 	SPPoint*** featsDB = (SPPoint***) malloc(numOfImages*sizeof(SPPoint**));
 	if (!featsDB) {
 		spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ - 2);
@@ -258,7 +239,7 @@ SPPoint*** spPreprocessing(int** NOFptr, const SPConfig config) {
 	}
 
 	// allocate numOfFeatures DB
-	char imagePath[1024];
+	char imagePath[STR_LEN];
 	int* numOfFeatures = (int*) malloc(numOfImages * sizeof(int));
 	if (!numOfFeatures) {
 		spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ - 2);
@@ -267,19 +248,19 @@ SPPoint*** spPreprocessing(int** NOFptr, const SPConfig config) {
 	}
 
 	// populate features DB
-	sp::ImageProc imageProc(config);
 	for (int i=0; i<numOfImages; i++) {
 		// extract and save
-		if (spConfigIsExtractionMode(config, &configMsg)) {
-			spConfigGetImagePath(imagePath, config, i);
-			numOfFeatures[i] = spConfigGetNumOfFeatures(config, &configMsg);
-			try { // c++ code here because imageProc.getImageFeatures throws exceptions
-				featsDB[i] = imageProc.getImageFeatures(imagePath, i, numOfFeatures + i);
-			} catch (...) {
-				// TODO: print error
+		if (spConfigIsExtractionMode(config, &configMsg)) { // ###no msg validation
+			if (spConfigGetImagePath(imagePath, config, i) != SP_CONFIG_SUCCESS) {
+				// failed getting image path
+				spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
 				featsDB[i] = NULL;
 			}
-			spSaveFeaturesFile(i, featsDB[i], numOfFeatures[i], config);
+			else {
+				numOfFeatures[i] = spConfigGetNumOfFeatures(config, &configMsg);
+				featsDB[i] = imageProc.getImageFeatures(imagePath, i, numOfFeatures + i);
+				spSaveFeaturesFile(i, featsDB[i], numOfFeatures[i], config);
+			}
 		}
 
 		// load
@@ -298,4 +279,94 @@ SPPoint*** spPreprocessing(int** NOFptr, const SPConfig config) {
 
 	spLoggerPrintInfo(INFOMSG_DONE_PRE);
 	return featsDB;
+}
+
+SPPoint** spQuery(int* queryNumOfFeatures, char* queryFilename, sp::ImageProc imageProc) {
+	// validate parameters
+	if (!queryNumOfFeatures || !queryFilename) {
+		spLoggerPrintError(ERRORMSG_NULL_ARGS, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+
+	// get query path from user
+	printf(OUTPUTMSG_QUERY);
+	fgets(queryFilename, STR_LEN, stdin);
+	if (queryFilename[strlen(queryFilename)-1] == '\n') queryFilename[strlen(queryFilename)-1] = '\0';
+
+	// if <> return NULL and print exit message
+	if (streq(queryFilename,QUERY_EXIT_STR)) {
+		printf(OUTPUTMSG_EXITING);
+		return NULL;
+	}
+
+	// else get query features
+	return imageProc.getImageFeatures(queryFilename, 0, queryNumOfFeatures);
+}
+
+int spFindSimilarImages(int* similarImages, SPPoint** queryFeats, int queryNumOfFeatures,
+		SPPoint*** featsDB,int* numOfFeatures, const SPConfig config) {
+	// validate parameters
+	if (!similarImages || !queryFeats || !featsDB || !numOfFeatures || !config) {
+		spLoggerPrintError(ERRORMSG_NULL_ARGS, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+
+	SP_CONFIG_MSG msg;
+	int numOfSimilarImages = spConfigGetNumOfSimilarImages(config, &msg);
+	if (msg != SP_CONFIG_SUCCESS) {
+		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+
+	//TODO: more similar images than images
+	for (int i=0; i<numOfSimilarImages; i++)
+		similarImages[i] = i;
+	//TODO
+	//findNearest(queryFeats, queryNumOfFeatures, featsDB, numOfFeaturse);
+	return 0;
+}
+
+int spShowResults(int* similarImages, char* imageFilename, sp::ImageProc imageProc, const SPConfig config) {
+	// validate parameters
+	if (!similarImages || !imageFilename || !config) {
+		spLoggerPrintError(ERRORMSG_NULL_ARGS, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+
+	SP_CONFIG_MSG msg;
+	char imagePath[STR_LEN];
+
+	// get minimal gui state
+	bool minimalGui = spConfigMinimalGui(config, &msg);
+	if (msg != SP_CONFIG_SUCCESS) {
+		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+
+	// get number of images
+	int numOfSimilarImages = spConfigGetNumOfSimilarImages(config, &msg);
+	if (msg != SP_CONFIG_SUCCESS) {
+		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+
+	// if not minimal gui - print general message
+	if (!minimalGui)
+		printf(OUTPUTMSG_NON_MINIMAL_GUI, imageFilename); //TODO
+
+	// output for all images
+	for (int i=0; i<numOfSimilarImages; i++) {
+		// get image path
+		if (spConfigGetImagePath(imagePath,config, similarImages[i]) != SP_CONFIG_SUCCESS) {
+			spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
+			return -1;
+		}
+		// output for image
+		if (minimalGui)
+			imageProc.showImage(imagePath);
+		else
+			printf("%s\n",imagePath);
+	}
+
+	return 0;
 }

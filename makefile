@@ -1,7 +1,7 @@
 CC = gcc
 CPP = g++
 #put all your object files here
-OBJS = main.o SPImageProc.o SPPoint.o SPConfig.o SPLogger.o main_aux.o 
+OBJS = main.o SPImageProc.o SPPoint.o SPConfig.o SPLogger.o main_aux.o #SPDKArray.o 
 #The executabel filename
 EXEC = SPCBIR
 INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
@@ -10,11 +10,11 @@ LIBS=-lopencv_xfeatures2d -lopencv_features2d \
 -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_core
 
 
-CPP_COMP_FLAG = -std=c++11 -Wall -Wextra \
--Werror -pedantic-errors -DNDEBUG
+CPP_COMP_FLAG = -std=c++11 #-Wall -Wextra \
+#-Werror -pedantic-errors -DNDEBUG
 
-C_COMP_FLAG = -std=c99 -Wall -Wextra \
--Werror -pedantic-errors -DNDEBUG
+C_COMP_FLAG = -std=c99 #-Wall -Wextra \
+#-Werror -pedantic-errors -DNDEBUG
 
 $(EXEC): $(OBJS)
 	$(CPP) $(OBJS) -L$(LIBPATH) $(LIBS) -o $@
@@ -35,6 +35,8 @@ SPConfig.o: SPConfig.c SPConfig.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
+#SPKDArray.o: SPKDArray.c SPKDArray.h 
+#	$(CC) $(C_COMP_FLAG) -c $*.c
 
 clean:
 	rm -f $(OBJS) $(EXEC)

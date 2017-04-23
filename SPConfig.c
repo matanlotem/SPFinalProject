@@ -4,31 +4,11 @@
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
+#include "SPConsts.h"
 #include "SPConfig.h"
 #include "SPLogger.h"
 
-// default values and limits
-#define SP_CONFIG_DEFAULT_PCA_DIMENSIONS 20
-#define SP_CONFIG_CONSTRAINT_PCA_DIMENSIONS_MIN 10
-#define SP_CONFIG_CONSTRAINT_PCA_DIMENSIONS_MAX 28
-#define SP_CONFIG_DEFAULT_PCA_FILENAME "pca.yml"
-#define SP_CONFIG_DEFAULT_NUM_OF_FEATURES 100
-#define SP_CONFIG_DEFAULT_EXTRACTION_MODE true
-#define SP_CONFIG_DEFAULT_MINIMAL_GUI false
-#define SP_CONFIG_DEFAULT_NUM_OF_SIMILAR_IMAGES 1
-#define SP_CONFIG_DEFAULT_KNN 1
-#define SP_CONFIG_DEFAULT_KD_TREE_SPLIT_METHOD MAX_SPREAD
-#define SP_CONFIG_DEFAULT_LOGGER_LEVEL 3
-#define SP_CONFIG_CONSTRAINT_LOGGER_LEVEL_MIN 1
-#define SP_CONFIG_CONSTRAINT_LOGGER_LEVEL_MAX 4
-#define SP_CONFIG_DEFAULT_LOGGER_FILENAME "stdout"
-#define SP_CONFIG_CONSTRAINT_IMAGES_PREFIX_NUM 4
-const char* SP_CONFIG_CONSTRAINT_IMAGES_PREFIX_VAL[] = {".jpg",".png",".bmp",".gif"};
-#define SP_FEATURES_SUFFIX ".feats"
-
-
-#define SP_CONFIG_INVAlID_LINE_MSG "Invalid configuration line"
-#define SP_CONFIG_INVAlID_VAL_MSG "Invalid value - constraint not met"
+const char* IMAGES_PREFIX_VAL[] = SP_CONFIG_CONSTRAINT_IMAGES_PREFIX_VAL;
 
 typedef enum kd_method {
 	RANDOM,
@@ -37,21 +17,20 @@ typedef enum kd_method {
 } KD_METHOD;
 
 struct sp_config_t{
-	char spImagesDirectory[1024];	// no spaces
-	char spImagesPrefix[1024];		// no spaces
-	char spImagesSuffix[1024];		// in {'.jpg','.png','.bmp','.gif'}
-	int spNumOfImages;				// >0
-	int spPCADimension;				// in [10,28]		default 20
-	char spPCAFilename[1024];		// no spaces		default pca.yml
-	int spNumOfFeatures;			// >0				default 100
-	bool spExtractionMode;			// 					default true
-	int spNumOfSimilarImages;		// >0				default 1
-	KD_METHOD spKDTreeSplitMethod;	//					default MAX_SPREAD
-	int spKNN;						// >0				default 1
-	bool spMinimalGUI;				// 					default false
-	int spLoggerLevel;				// in {1,2,3,4}		default 3
-	char spLoggerFilename[1024];	// no spaces		default stdout (NULL)
-	//TODO 1024 -> 1025 -> CONST
+	char spImagesDirectory[STR_LEN];	// no spaces
+	char spImagesPrefix[STR_LEN];		// no spaces
+	char spImagesSuffix[STR_LEN];		// in {'.jpg','.png','.bmp','.gif'}
+	int spNumOfImages;					// >0
+	int spPCADimension;					// in [10,28]		default 20
+	char spPCAFilename[STR_LEN];		// no spaces		default pca.yml
+	int spNumOfFeatures;				// >0				default 100
+	bool spExtractionMode;				// 					default true
+	int spNumOfSimilarImages;			// >0				default 1
+	KD_METHOD spKDTreeSplitMethod;		//					default MAX_SPREAD
+	int spKNN;							// >0				default 1
+	bool spMinimalGUI;					// 					default false
+	int spLoggerLevel;					// in {1,2,3,4}		default 3
+	char spLoggerFilename[STR_LEN];		// no spaces		default stdout (NULL)
 };
 
 /*
@@ -225,7 +204,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 
 	/*** START PARSING ***/
 	/*********************/
-	char line[1024];//, var[1024], val[1024];
+	char line[STR_LEN];
 	char *var, *val;
 	int lineNum = 0;
 	while (fgets(line, sizeof(line), configFile) && *msg == SP_CONFIG_SUCCESS) {
@@ -256,7 +235,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 		// spImagesSuffix
 		else if (streq(var, "spImagesSuffix")) {
 			*msg = spConfigParseString(val, config->spImagesSuffix,
-									   (char**) SP_CONFIG_CONSTRAINT_IMAGES_PREFIX_VAL,
+									   (char**) IMAGES_PREFIX_VAL,
 									   SP_CONFIG_CONSTRAINT_IMAGES_PREFIX_NUM);
 			setImagesSuffix = true;
 		}
@@ -302,7 +281,7 @@ SPConfig spConfigCreate(const char* filename, SP_CONFIG_MSG* msg) {
 
 		// spLoggerLevel
 		else if (streq(var, "spLoggerLevel"))
-			*msg =spConfigParseInt(val, &(config->spLoggerLevel), 1, INT_MAX);
+			*msg =spConfigParseInt(val, &(config->spLoggerLevel), 1, 4);
 
 		// spLoggerFilename
 		else if (streq(var, "spLoggerFilename"))
@@ -367,6 +346,12 @@ bool spConfigMinimalGui(const SPConfig config, SP_CONFIG_MSG* msg) {
 int spConfigGetNumOfImages(const SPConfig config, SP_CONFIG_MSG* msg) {
 	if (spConfigValidate(config, msg))
 		return config->spNumOfImages;
+	return -1;
+}
+
+int spConfigGetNumOfSimilarImages(const SPConfig config, SP_CONFIG_MSG* msg) {
+	if (spConfigValidate(config, msg))
+		return config->spNumOfSimilarImages;
 	return -1;
 }
 

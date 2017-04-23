@@ -105,6 +105,8 @@ SP_LOGGER_MSG spLoggerPrintInfo(const char* msg) {
 
 SP_LOGGER_MSG spLoggerPrintDebug(const char* msg, const char* file,
 		const char* function, const int line) {
+	if (!logger)
+		return SP_LOGGER_UNDEFINED;
 	if (logger->level == SP_LOGGER_DEBUG_INFO_WARNING_ERROR_LEVEL)
 		return spLoggerPrint("DEBUG", msg, file, function, line);
 	return SP_LOGGER_SUCCESS;
