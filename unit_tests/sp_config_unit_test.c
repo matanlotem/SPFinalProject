@@ -117,7 +117,7 @@ static bool defaultValConfigTest() {
 
 static bool valueConfigTest() {
 	SP_CONFIG_MSG msg;
-	SPConfig config = spConfigCreate(CONFIG_TEST_DIR "defaultConfigTest.config",&msg);
+	SPConfig config = spConfigCreate(CONFIG_TEST_DIR "testValueConfig.config",&msg);
 	ASSERT_TRUE(msg == SP_CONFIG_SUCCESS);
 
 	ASSERT_TRUE(spConfigIsExtractionMode(config, &msg) == false);
@@ -126,7 +126,7 @@ static bool valueConfigTest() {
 	ASSERT_TRUE(msg == SP_CONFIG_SUCCESS);
 	ASSERT_TRUE(spConfigGetNumOfFeatures(config, &msg) == 5);
 	ASSERT_TRUE(msg == SP_CONFIG_SUCCESS);
-	ASSERT_TRUE(spConfigGetPCADim(config, &msg) == 7);
+	ASSERT_TRUE(spConfigGetPCADim(config, &msg) == 11);
 	ASSERT_TRUE(msg == SP_CONFIG_SUCCESS);
 	ASSERT_TRUE(spConfigGetNumOfImages(config, &msg) == 13);
 	ASSERT_TRUE(msg == SP_CONFIG_SUCCESS);

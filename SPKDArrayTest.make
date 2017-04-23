@@ -1,5 +1,5 @@
 CC = gcc
-OBJS = smallKDArrayTester.o SPKDArray.o SPPoint
+OBJS = smallKDArrayTester.o SPKDArray.o SPPoint.o
 EXEC = smallKDArrayTester
 TESTS_DIR = ./unit_tests
 COMP_FLAG = -std=c99 #-Wall -Wextra \
