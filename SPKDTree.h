@@ -15,13 +15,13 @@ typedef struct kd_tree_node_t SPKDTreeNode;
 
 /**
  */
-SPKDTreeNode* spKDTreeInit(SPConfig configData , SPPoint** arr, int n);
+SPKDTreeNode* spKDTreeInit(const SPConfig configData , SPPoint** arr, int n);
 
-SPKDTreeNode* spKDTreeInitRecursion(SPConfig configData , SPKDArray* kdA, int coorSplit);
+SPKDTreeNode* spKDTreeInitRecursion(const SPConfig configData , SPKDArray* kdA, int coorSplit);
 
-SPBPQueue* kNearestNeighbours(SPConfig configData , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint);
+SPBPQueue* kNearestNeighbours(const SPConfig configData , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint);
 
-SPBPQueue* kNearestNeighboursTree(SPConfig configData , SPPoint** pointsArray, SPKDTreeNode* root, SPPoint* targetPoint);
+SPBPQueue* kNearestNeighboursTree(const SPConfig configData , SPPoint** pointsArray, SPKDTreeNode* root, SPPoint* targetPoint);
 
 void kNearestNeighboursRecursion(SPBPQueue* bpq, SPPoint** pointsArray, SPKDTreeNode* curr, SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse);
 
