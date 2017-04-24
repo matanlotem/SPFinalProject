@@ -23,7 +23,7 @@ struct kd_tree_node_t {
 };
 
 
-SPKDTreeNode* spKDTreeInit(SPConfig configData , SPPoint** pointsArray, int pointsArraySize){
+SPKDTreeNode* spKDTreeInit(const SPConfig configData , SPPoint** pointsArray, int pointsArraySize){
 	if(pointsArray == NULL || pointsArraySize < 1)
 		return NULL;
 	SPKDArray* kdA = spKDArrayInit(pointsArray, pointsArraySize);
@@ -32,7 +32,8 @@ SPKDTreeNode* spKDTreeInit(SPConfig configData , SPPoint** pointsArray, int poin
     return spKDTreeInitRecursion(configData, kdA, 0);
 }
 
-SPKDTreeNode* spKDTreeInitRecursion(SPConfig configData , SPKDArray* kdA, int coorSplit){
+SPKDTreeNode* spKDTreeInitRecursion(const SPConfig configData , SPKDArray* kdA, int coorSplit){
+    SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(*msg));
 	SPKDTreeNode* newNode = (SPKDTreeNode*) malloc(sizeof(*newNode));
 	if(newNode == NULL)
 		return NULL;
@@ -49,17 +50,17 @@ SPKDTreeNode* spKDTreeInitRecursion(SPConfig configData , SPKDArray* kdA, int co
 		int i = 0;
 		double maxSpread = 0;
 		double currentSpread = 0;
-		if(configData->spKDTreeSplitMethod == INCREMENTAL)
+		if(spConfigGetKDSplitMethod(configData, msg) == INCREMENTAL)
 		{
 			coorSplit = coorSplit+1;
 			if(coorSplit > d)
 				coorSplit = 1;
 		}
-		if(configData->spKDTreeSplitMethod == RANDOM)
+		if(spConfigGetKDSplitMethod(configData, msg)  == RANDOM)
 		{
 			coorSplit = (rand() % d) + 1;
 		}
-		if(configData->spKDTreeSplitMethod == MAX_SPREAD)
+		if(spConfigGetKDSplitMethod(configData, msg)  == MAX_SPREAD)
 		{
 			coorSplit = 1;
 			for(i = 0; i<d; i++){
@@ -83,11 +84,12 @@ SPKDTreeNode* spKDTreeInitRecursion(SPConfig configData , SPKDArray* kdA, int co
 		free(kdASplit);
 		spKDArrayDestroy(kdA);
 	}
+	free(msg);
     return newNode;
 }
 
 
-SPBPQueue* kNearestNeighbours(SPConfig configData , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint){
+SPBPQueue* kNearestNeighbours(const SPConfig configData , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint){
 	if( (pointsArray == NULL || targetPoint == NULL) || pointsArraySize < 1)
 		return NULL;
     SPKDTreeNode* root = spKDTreeInit(configData , pointsArray, pointsArraySize);
@@ -98,10 +100,11 @@ SPBPQueue* kNearestNeighbours(SPConfig configData , SPPoint** pointsArray, int p
 	return bpq;
 }
 
-SPBPQueue* kNearestNeighboursTree(SPConfig configData , SPPoint** pointsArray, SPKDTreeNode* root, SPPoint* targetPoint){
+SPBPQueue* kNearestNeighboursTree(const SPConfig configData , SPPoint** pointsArray, SPKDTreeNode* root, SPPoint* targetPoint){
+    SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(*msg));
 	if((root == NULL || pointsArray == NULL) || targetPoint == NULL)
 		return NULL;
-    SPBPQueue* bpq = spBPQueueCreate(configData->spKNN);
+    SPBPQueue* bpq = spBPQueueCreate(spConfigGetKNN(configData, msg));
     double* lowLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double));
     double* highLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double));
     int* lowLimitUse = (int*) malloc(spPointGetDimension(targetPoint) * sizeof(int));
@@ -131,6 +134,7 @@ SPBPQueue* kNearestNeighboursTree(SPConfig configData , SPPoint** pointsArray, S
     free(lowLimit);
     free(highLimitUse);
     free(lowLimitUse);
+    free(msg);
 	return bpq;
 }
 
