@@ -46,7 +46,6 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size);
  */
 SPKDArray* spKDArrayInitPreSorted(SPPoint** data, int** a, int size , int d);
 
-
 /**
  * Splits an inputed KD array in half, into 2 KD arrays.
  * The points are sorted by their coordnates in the inputed dimension, coor,
@@ -60,7 +59,7 @@ SPKDArray* spKDArrayInitPreSorted(SPPoint** data, int** a, int size , int d);
 SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor);
 
 /**
- * Makes a new copy of the pointers in an SPPoint array.
+ * Makes a new copy of an SPPoint pointers array, base, with size elements.
  *
  * @return
  * The copy is returned (NULL in case of allocation error)
@@ -68,9 +67,9 @@ SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor);
 SPPoint** spCopyPointArray(SPPoint** base, int size );
 
 /**
- * Sorts row number d of the inputed matrix a by the coordinates of the points in the inputed dimension.
- * The sort is logarithmic, complexity O(size log(size)). It requires an int array with size elements
- * for temporary sorting purposes.
+ * Merge sorts row number d of the inputed matrix a by the coordinates of the points in the inputed dimension.
+ * The sort is logarithmic, complexity O(size log(size)). It requires an int array, tempArray, with size elements
+ * for temporary sorting purposes, since it would be less efficient to reallocate memory to one each time sort is called.
  *
  * @return
  * 1 if sort succeeded (-1 in case of error)
@@ -116,4 +115,3 @@ int* spKDArrayGetIndicesByDim(SPKDArray* kdA, int dim);
 void spKDArrayDestroy(SPKDArray* kdA);
 
 #endif // SPKDARRAY_H_INCLUDED
-

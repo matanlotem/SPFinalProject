@@ -25,10 +25,10 @@
 
 /** Type for defining the array **/
 struct kd_array_t {
-	SPPoint** arr;
-	int** arrIndices;
-	int dim;
-	int size;
+	SPPoint** arr; /* The array of pointers to the points  */
+	int** arrIndices; /* Each row contains the sorted indices for the dimension with that row number */
+	int dim; /* The number of dimensions each point has */
+	int size; /* The number of points */
 };
 
 /**
@@ -43,11 +43,10 @@ struct kd_array_t {
  * Otherwise, the new KD Array is returned
  */
 SPKDArray* spKDArrayInit(SPPoint** arr, int size){
-    int i = 0;
-    int j = 0;
-    int d = 0;
+    int iError = -1; /* Allocation error checker */
+    int d = 0; /* Number of dimensions of each point */
     if(size>0 && arr != NULL){
-        for(i = 0; i<size ; i++){
+        for(int i = 0; i<size ; i++){ /* Check that all points exist and have the same dimension */
             if(arr[i] == NULL){
                 d = 0;
                 i = size;
@@ -60,28 +59,32 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             }
         }
         if(d > 0){
-            int **a = (int**) malloc(d*sizeof(*a));
+            int **a = (int**) malloc(d*sizeof(*a)); /* a is the sorted matrix of indexes */
             if(a == NULL)
+                // NULL allocation error
                 return NULL;
-            int* tempArray = (int*) malloc(size*sizeof(int));
+            int* tempArray = (int*) malloc(size*sizeof(int)); /* tempArray will help in sort */
             if(tempArray == NULL){
+                // NULL allocation error
                 free(a);
                 return NULL;
             }
-            for(i = 0; i<d ; i++){
+            for(int i = 0; i<d ; i++){
                 a[i] = (int*) malloc(size*sizeof(int));
                 if(a[i] == NULL){
                     d = -1;
+                    iError = i;
                 }
                 else{
-                    for(j = 0; j<size; j++)
-                        a[i][j] = j;
-                    spSortPointArrayByDimension(a , arr , size, i, tempArray);
+                    for(int j = 0; j<size; j++)
+                        a[i][j] = j; /* The initial index order before sort is 0,1,...,size-1 in each row */
+                    spSortPointArrayByDimension(a , arr , size, i, tempArray); /* Merge sort of row i */
                 }
             }
             free(tempArray);
             if(d == -1){
-                for(i--; i>-1 ; i--){
+                // NULL allocation error
+                for(int i = 0; i < iError ; i++){
                     free(a[i]);
                 }
                 free(a);
@@ -89,7 +92,8 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             }
             SPPoint** dataCopy = spCopyPointArray(arr , size);
             if(dataCopy == NULL){
-                for(i--; i>-1 ; i--){
+                // NULL allocation error
+                for(int i = 0; i<d ; i++){
                     free(a[i]);
                 }
                 free(a);
@@ -98,7 +102,8 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             SPKDArray* res = spKDArrayInitPreSorted(dataCopy, a, size , d);
             if(res == NULL)
             {
-                for(i = d-1; i>-1 ; i--)
+                // NULL allocation error
+                for(int i = 0; i<d ; i++)
                     free(a[i]);
                 free(a);
                 free(dataCopy);
@@ -107,6 +112,7 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             return res;
         }
     }
+    // NULL input error (NULL array or some points have different dimensions than others)
     return NULL;
 }
 
@@ -126,7 +132,8 @@ SPKDArray* spKDArrayInitPreSorted(SPPoint** data, int** a, int size , int d){
         res->arrIndices = a;
         return res;
     }
-    return NULL;
+    return NULL; /* This error is handled in above function */
+
 }
 
 
@@ -141,47 +148,54 @@ SPKDArray* spKDArrayInitPreSorted(SPPoint** data, int** a, int size , int d){
  * NULL is returned in case of allocation error.
  */
 SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor){
-    if(kdArr == NULL)
+    if(kdArr == NULL){
+        // NULL input error
         return NULL;
-    if((coor < 1 || coor > kdArr->dim) || kdArr->size < 2)
+    }
+    if((coor < 1 || coor > kdArr->dim) || kdArr->size < 2){
+        // NULL input error
         return NULL;
+    }
     int n1 = kdArr->size;
     if(n1 % 2 == 1)
         n1 = n1+1;
-    n1 = (int) n1/2;
-    int n2 = kdArr->size - n1;
-    int i = 0;
-    int k = 0;
-    int j1 = 0;
-    int j2 = 0;
-    SPKDArray** res = (SPKDArray**) malloc(2*(sizeof(kdArr)));
-    int* tempSplitArray = (int*) malloc((kdArr->size)*sizeof(int));
-    int* tempNewIndex = (int*) malloc((kdArr->size)*sizeof(int));
-    SPPoint **dataLeft = (SPPoint**) malloc(n1*sizeof(*dataLeft));
-    SPPoint **dataRight = (SPPoint**) malloc(n2*sizeof(*dataRight));
-    int **aLeft = (int**) malloc((kdArr->dim)*sizeof(*aLeft));
-    int **aRight = (int**) malloc((kdArr->dim)*sizeof(*aRight));
+    n1 = (int) n1/2; /* The number of points of the left array */
+    int n2 = kdArr->size - n1; /* The number of points of the right array */
+    int kError = 0; /* Allocation error checker */
+    int j1 = 0; /* Index for left array */
+    int j2 = 0; /* Index for right array */
+    SPKDArray** res = (SPKDArray**) malloc(2*(sizeof(kdArr))); /* res[0] is the pointer to the left array, and res[1] is the pointer to the right array */
+    int* tempSplitArray = (int*) malloc((kdArr->size)*sizeof(int)); /* tempSplitArray[i] is the index of point i in row kdArr->arrIndices[coor-1] */
+    int* tempNewIndex = (int*) malloc((kdArr->size)*sizeof(int)); /* tempNewIndex[i] is the index of point i in the new left or right array */
+    SPPoint **dataLeft = (SPPoint**) malloc(n1*sizeof(*dataLeft)); /* The points of the left array */
+    SPPoint **dataRight = (SPPoint**) malloc(n2*sizeof(*dataRight)); /* The points of the right array */
+    int **aLeft = (int**) malloc((kdArr->dim)*sizeof(*aLeft)); /* The matrix of indices of the left array */
+    int **aRight = (int**) malloc((kdArr->dim)*sizeof(*aRight)); /* The matrix of indices of the right array */
     if(aRight != NULL && aLeft != NULL){
-        for(k = 0; k< kdArr->dim ; k++){
+        for(int k = 0; k< kdArr->dim ; k++){ /* Loop to initialise all rows in the matrixes */
             aLeft[k] = (int*) malloc((n1)*sizeof(int));
-            if(aLeft[k] == NULL)
+            if(aLeft[k] == NULL){
+                kError = k;
                 k = k+2*kdArr->dim;
+            }
             else{
                 aRight[k] = (int*) malloc((n2)*sizeof(int));
                 if(aRight[k] == NULL){
                     free(aLeft[k]);
+                    kError = k;
                     k = k+2*kdArr->dim;
                 }
             }
         }
-        if(k > 2*kdArr->dim-1){
-            for(k = k - (2*kdArr->dim+1);k>-1;k--){
+        if(kError != 0){
+            for(int k = 0; k< kError ; k++){
                 free(aLeft[k]);
                 free(aRight[k]);
             }
         }
     }
-    if((((dataRight == NULL || dataLeft == NULL) || (res == NULL || tempSplitArray == NULL)) || (aRight == NULL || aLeft == NULL)) || (tempNewIndex == NULL || k<0)){
+    if((((dataRight == NULL || dataLeft == NULL) || (res == NULL || tempSplitArray == NULL)) || (aRight == NULL || aLeft == NULL)) || (tempNewIndex == NULL || kError != 0)){
+        // NULL allocation error
         if(res != NULL)
             free(res);
         if(tempNewIndex != NULL)
@@ -198,31 +212,31 @@ SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor){
             free(aRight);
         return NULL;
     }
-    for(i = 0; i< kdArr->size ; i++){
-        tempSplitArray[kdArr->arrIndices[coor-1][i]] = i;
+    for(int i = 0; i< kdArr->size ; i++){
+        tempSplitArray[kdArr->arrIndices[coor-1][i]] = i; /* Setting the correct tempSplitArray values */
     }
-    for(i = 0; i< kdArr->size ; i++){
+    for(int i = 0; i< kdArr->size ; i++){
         if(tempSplitArray[i]<n1){
-            dataLeft[j1] = kdArr->arr[i];
-            tempNewIndex[i] = j1;
+            dataLeft[j1] = kdArr->arr[i]; /* Filling the point array */
+            tempNewIndex[i] = j1; /* Setting the correct tempNewIndex values */
             j1++;
         }
         else{
-            dataRight[j2] = kdArr->arr[i];
-            tempNewIndex[i] = j2;
+            dataRight[j2] = kdArr->arr[i]; /* Filling the point array */
+            tempNewIndex[i] = j2; /* Setting the correct tempNewIndex values */
             j2++;
         }
     }
-    for(k = 0; k< kdArr->dim ; k++){
+    for(int k = 0; k< kdArr->dim ; k++){
         j1 = 0;
         j2 = 0;
-        for(i = 0; i< kdArr->size ; i++){
+        for(int i = 0; i< kdArr->size ; i++){
             if(tempSplitArray[kdArr->arrIndices[k][i]]<n1){
-                aLeft[k][j1] = tempNewIndex[kdArr->arrIndices[k][i]];
+                aLeft[k][j1] = tempNewIndex[kdArr->arrIndices[k][i]]; /* Filling the matrix in correct order */
                 j1++;
             }
             else{
-                aRight[k][j2] = tempNewIndex[kdArr->arrIndices[k][i]];
+                aRight[k][j2] = tempNewIndex[kdArr->arrIndices[k][i]]; /* Filling the matrix in correct order */
                 j2++;
             }
         }
@@ -235,91 +249,97 @@ SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor){
 }
 
 /**
- * Makes a new copy of the pointers of an SPPoint array.
+ * Makes a new copy of an SPPoint pointers array, base, with size elements.
  *
  * @return
  * The copy is returned (NULL in case of allocation error)
  */
 SPPoint** spCopyPointArray(SPPoint** base, int size ){
-    int i=0;
-    int j=0;
+    int iChecker=size;
     if(size>0 && base != NULL){
         SPPoint **res = (SPPoint**) malloc(size*(sizeof(*res)));
         if(res != NULL){
-            for(i = 0; i < size; i++){
+            for(int i = 0; i < size; i++){
                 res[i] = NULL;
                 if(base[i] != NULL)
                     res[i] = base[i];
                 if(res[i] == NULL){
                     i = size+1;
+                    iChecker = size+1;
                 }
             }
-            if(i != size){
+            if(iChecker != size){
+                // NULL input error (missing point)
                 free(res);
                 return NULL;
             }
             return res;
         }
+        // NULL allocation error
+        return NULL;
     }
+    // NULL input error
     return NULL;
 }
 
 /**
- * Sorts row number d of the inputed matrix a by the coordinates of the points in the inputed dimension.
- * The sort is logarithmic, complexity O(size log(size)). It requires an int array with size elements
- * for temporary sorting purposes.
+ * Merge sorts row number d of the inputed matrix a by the coordinates of the points in the inputed dimension.
+ * The sort is logarithmic, complexity O(size log(size)). It requires an int array, tempArray, with size elements
+ * for temporary sorting purposes, since it would be less efficient to reallocate memory to one each time sort is called.
  *
  * @return
  * 1 if sort succeeded (-1 in case of error)
  */
 int spSortPointArrayByDimension(int** a , SPPoint** data, int size, int d , int* tempArray){
-    int i = 0;
-    int i2 = 0;
-    int i3 = 0;
-    int i4 = 0;
-    int i5 = 0;
-    int dim = 0;
+    int i3 = 0; /* Counter for first group to merge */
+    int i4 = 0; /* Counter for second group to merge */
+    int i5 = 0; /* Counter for the result of the merge */
+    int dim = 0; /* The number of dimensions in each point */
     if((size>0 && d>-1) && (a != NULL && data != NULL)){
-        for(i = 0; i < size; i++){
+        for(int i = 0; i < size; i++){
             if(data[i] != NULL){
                 if(i == 0)
                     dim = spPointGetDimension((data[i]));
                 if(spPointGetDimension((data[i])) != dim){
+                    // NULL input error (wrong dimension of point)
                     return -1;
                 }
             }
-            else
+            else{
+                // NULL input error (missing row in matrix)
                 return -1;
+            }
         }
-        if(a[d] == NULL)
+        if(a[d] == NULL){
+            // NULL input error (missing row in matrix)
             return -1;
+        }
         if(tempArray != NULL){
-            i = 2;
-            for(i = 1; i < size ; i = i*2){
-                for(i2 = 0; i2 < size ; i2 = i2 + i*2){
+            for(int i = 1; i < size ; i = i*2){
+                for(int i2 = 0; i2 < size ; i2 = i2 + i*2){
                     i3 = i2;
                     i4 = i2+i;
                     for(i5 = i2;(i3 < size && i4 < size) && (i3 < i2+i && i4<i2 + i*2) ; i5++){
                         if(spPointGetAxisCoor(data[a[d][i4]],d) < spPointGetAxisCoor(data[a[d][i3]],d)){
-                            tempArray[i5] = a[d][i4];
+                            tempArray[i5] = a[d][i4]; /* Point a[d][i4] comes before point a[d][i3] in dimension d */
                             i4 = i4+1;
                         }
                         else{
-                            tempArray[i5] = a[d][i3];
+                            tempArray[i5] = a[d][i3]; /* Point a[d][i3] comes before point a[d][i4] in dimension d */
                             i3 = i3+1;
                         }
                     }
                     for(; i3 < size && i3 < i2+i ; i5++){
-                        tempArray[i5] = a[d][i3];
+                        tempArray[i5] = a[d][i3]; /* The rest of the points in the first group */
                         i3 = i3+1;
                     }
                     for(; i4 < size && i4 < i2 + i*2 ; i5++){
-                        tempArray[i5] = a[d][i4];
+                        tempArray[i5] = a[d][i4]; /* The rest of the points in the second group */
                         i4 = i4+1;
                     }
                 }
-                for(i2 = 0; i2 < size ; i2++)
-                    a[d][i2] = tempArray[i2];
+                for(int i2 = 0; i2 < size ; i2++)
+                    a[d][i2] = tempArray[i2]; /* Moving the result of the merge back to row d */
             }
             return 1;
         }
@@ -390,4 +410,3 @@ void spKDArrayDestroy(SPKDArray* kdA){
         free(kdA);
     }
 }
-

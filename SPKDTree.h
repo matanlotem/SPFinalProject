@@ -15,29 +15,20 @@ typedef struct kd_tree_node_t SPKDTreeNode;
 
 /**
  */
-SPKDTreeNode* spKDTreeInit(const SPConfig configData , SPPoint** arr, int n);
+SPKDTreeNode* spKDTreeInit(KD_METHOD splitMethod , SPPoint** pointsArray, int pointsArraySize);
 
-SPKDTreeNode* spKDTreeInitRecursion(const SPConfig configData , SPKDArray* kdA, int coorSplit);
+SPKDTreeNode* spKDTreeInitRecursion(KD_METHOD splitMethod , SPKDArray* kdA, int coorSplit);
 
-SPBPQueue* kNearestNeighbours(const SPConfig configData , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint);
 
-SPBPQueue* kNearestNeighboursTree(const SPConfig configData , SPPoint** pointsArray, SPKDTreeNode* root, SPPoint* targetPoint);
+int* closestImagesSearch(int kNN, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages);
 
-void kNearestNeighboursRecursion(SPBPQueue* bpq, SPPoint** pointsArray, SPKDTreeNode* curr, SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse);
+int kNearestNeighboursTree(SPBPQueue* bpq , SPKDTreeNode* root, SPPoint* targetPoint);
+
+void kNearestNeighboursRecursion(SPBPQueue* bpq, SPKDTreeNode* curr, SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse);
 
 double minDistanceSquared(SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse);
 
-bool isLeaf(SPKDTreeNode* curr);
-
-SPPoint* getData(SPKDTreeNode* curr);
-
-SPKDTreeNode* getLeft(SPKDTreeNode* curr);
-
-SPKDTreeNode* getRight(SPKDTreeNode* curr);
-
-int getSplitDimension(SPKDTreeNode* curr);
-
-double getMedianValue(SPKDTreeNode* curr);
+SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeatures, KD_METHOD splitMethod);
 
 /**
  * Frees all allocated memory of kdTree.
@@ -45,13 +36,6 @@ double getMedianValue(SPKDTreeNode* curr);
  */
 void spKDTreeDestroy(SPKDTreeNode* curr);
 
-
-SPKDTreeNode* spKDTreeInitNoConfig(int splitMethod , SPPoint** pointsArray, int pointsArraySize);
-
-SPKDTreeNode* spKDTreeInitRecursionNoConfig(int splitMethod , SPKDArray* kdA, int coorSplit);
-
-SPBPQueue* kNearestNeighboursNoConfig(int splitMethod, int kNN , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint);
-
-SPBPQueue* kNearestNeighboursTreeNoConfig(int kNN , SPPoint** pointsArray, SPKDTreeNode* root, SPPoint* targetPoint);
+SPBPQueue* kNearestNeighbours(KD_METHOD splitMethod, int kNN , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint);
 
 #endif // SPKDTREE_H_INCLUDED

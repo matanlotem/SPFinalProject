@@ -15,29 +15,31 @@
 
 /** Type for defining the tree node **/
 struct kd_tree_node_t {
-	SPPoint* data;
-	SPKDTreeNode* left;
-	SPKDTreeNode* right;
-	int dim;
-	double val;
+	SPPoint* data; /* If the node is a leaf, data is the pointer to the point it represents */
+	SPKDTreeNode* left; /* The left child node */
+	SPKDTreeNode* right; /* The right child node */
+	int dim; /* The dimension which the kd array was split by at this node */
+	double val; /* The median value around which the kd array was split by at this node */
 };
 
-
-SPKDTreeNode* spKDTreeInit(const SPConfig configData , SPPoint** pointsArray, int pointsArraySize){
-	if(pointsArray == NULL || pointsArraySize < 1)
+SPKDTreeNode* spKDTreeInit(KD_METHOD splitMethod , SPPoint** pointsArray, int pointsArraySize){
+	if(pointsArray == NULL || pointsArraySize < 1){
+        // NULL Input error
 		return NULL;
+	}
 	SPKDArray* kdA = spKDArrayInit(pointsArray, pointsArraySize);
 	if(kdA == NULL)
 		return NULL;
-    return spKDTreeInitRecursion(configData, kdA, 0);
+    return spKDTreeInitRecursion (splitMethod, kdA, 0);
 }
 
-SPKDTreeNode* spKDTreeInitRecursion(const SPConfig configData , SPKDArray* kdA, int coorSplit){
-    SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(*msg));
+SPKDTreeNode* spKDTreeInitRecursion(KD_METHOD splitMethod , SPKDArray* kdA, int coorSplit){
 	SPKDTreeNode* newNode = (SPKDTreeNode*) malloc(sizeof(*newNode));
-	if(newNode == NULL)
+	if(newNode == NULL){
+        // NULL allocation error
 		return NULL;
-	if(spKDArrayGetSize(kdA) == 1){
+	}
+	if(spKDArrayGetSize(kdA) == 1){ /* Leaf initialisation */
 		newNode->left = NULL;
 		newNode->right = NULL;
 		newNode->dim = -1;
@@ -47,23 +49,22 @@ SPKDTreeNode* spKDTreeInitRecursion(const SPConfig configData , SPKDArray* kdA, 
 	else{
 		int n = spKDArrayGetSize(kdA);
 		int d = spKDArrayGetDimension(kdA);
-		int i = 0;
-		double maxSpread = 0;
-		double currentSpread = 0;
-		if(spConfigGetKDSplitMethod(configData, msg) == INCREMENTAL)
+		if(splitMethod == INCREMENTAL) /* INCREMENTAL method (adds 1 to previous coorSplit) */
 		{
 			coorSplit = coorSplit+1;
 			if(coorSplit > d)
 				coorSplit = 1;
 		}
-		if(spConfigGetKDSplitMethod(configData, msg)  == RANDOM)
+		if(splitMethod == RANDOM) /* RANDOM method (random coorSplit) */
 		{
 			coorSplit = (rand() % d) + 1;
 		}
-		if(spConfigGetKDSplitMethod(configData, msg)  == MAX_SPREAD)
+		if(splitMethod == MAX_SPREAD) /* MAX_SPREAD method (coorSplit will be the dimension with the largest range of points) */
 		{
+            double maxSpread = 0;
+            double currentSpread = 0;
 			coorSplit = 1;
-			for(i = 0; i<d; i++){
+			for(int i = 0; i<d; i++){
 				currentSpread = spPointGetAxisCoor((spKDArrayGetArray(kdA))[(spKDArrayGetIndicesByDim(kdA, i+1))[n-1]],i) - spPointGetAxisCoor((spKDArrayGetArray(kdA))[(spKDArrayGetIndicesByDim(kdA, i+1))[0]],i);
 				if(maxSpread < currentSpread){
 					maxSpread = currentSpread;
@@ -71,45 +72,78 @@ SPKDTreeNode* spKDTreeInitRecursion(const SPConfig configData , SPKDArray* kdA, 
 				}
 			}
 		}
-		SPKDArray** kdASplit = spKDArraySplit(kdA, coorSplit);
+		SPKDArray** kdASplit = spKDArraySplit(kdA, coorSplit); /* Split the array by dimension coorSplit */
 		newNode->dim = coorSplit;
-		i = n;
+		int medianIndex = n;
 		if(n % 2 == 1)
-			i = i-1;
-		i = (int)(i/2);
-		newNode->val = spPointGetAxisCoor((spKDArrayGetArray(kdA))[(spKDArrayGetIndicesByDim(kdA, coorSplit))[i]],coorSplit-1);
-		newNode->data = NULL;
-		newNode->left = spKDTreeInitRecursion(configData, kdASplit[0], coorSplit);
-		newNode->right = spKDTreeInitRecursion(configData, kdASplit[1], coorSplit);
+			medianIndex = medianIndex-1;
+		medianIndex = (int)(medianIndex/2); /* newNode->val is set as the coordinate of the middle point (index medianIndex) in dimension coorSplit */
+		newNode->val = spPointGetAxisCoor((spKDArrayGetArray(kdA))[(spKDArrayGetIndicesByDim(kdA, coorSplit))[medianIndex]],coorSplit-1);
+		newNode->data = NULL; /* NULL data marks node, non-leaf */
+		newNode->left = spKDTreeInitRecursion(splitMethod, kdASplit[0], coorSplit); /* Left child recursion, with left kd array */
+		newNode->right = spKDTreeInitRecursion(splitMethod, kdASplit[1], coorSplit); /* Right child recursion, with right kd array */
 		free(kdASplit);
 		spKDArrayDestroy(kdA);
 	}
-	free(msg);
     return newNode;
 }
 
 
-SPBPQueue* kNearestNeighbours(const SPConfig configData , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint){
-	if( (pointsArray == NULL || targetPoint == NULL) || pointsArraySize < 1)
+int* closestImagesSearch(int kNN, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages){
+	if(targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1){
+        // NULL Input Error, empty array
 		return NULL;
-    SPKDTreeNode* root = spKDTreeInit(configData , pointsArray, pointsArraySize);
-	if(root == NULL)
+	}
+	int* imageResults = (int*) malloc(numOfImages * sizeof(int)); /* imageResults[i] is the number of features image i has that are close to features in targetFeatures. */
+	int* imageCheck = (int*) malloc(numOfImages * sizeof(int)); /* targetFeatures[imageCheck[i]] is the last feature that was close to a feature in image i. */
+	BPQueueElement* peekElementPointer = (BPQueueElement*) malloc(sizeof(*peekElementPointer)); /* Element required to check the queues */
+    SPBPQueue* bpQueue = spBPQueueCreate(kNN); /* This queue will be filled with similar features, and emptied, for each feature in targetFeatures */
+	if(imageResults == NULL || imageCheck == NULL || peekElementPointer == NULL || bpQueue == NULL){
+        // NULL allocation error
+        if(imageResults != NULL)
+            free(imageResults);
+        if(imageCheck != NULL)
+            free(imageCheck);
+        if(peekElementPointer != NULL)
+            free(peekElementPointer);
+        if(bpQueue != NULL)
+            spBPQueueDestroy(bpQueue);
 		return NULL;
-    SPBPQueue* bpq = kNearestNeighboursTree(configData , pointsArray, root, targetPoint);
-    spKDTreeDestroy(root);
-	return bpq;
+	}
+    for(int i = 0; i < numOfImages; i++){
+        imageResults[i] = 0; /* Initialisation of imageResults */
+        imageCheck[i] = -1; /* Initialisation of imageCheck */
+    }
+    for(int i = 0; i < numOfTargetFeatures; i++){ /* The main loop */
+        kNearestNeighboursTree(bpQueue , root, targetFeatures[i]); /* Fill bpQueue with close features */
+        if(bpQueue != NULL){
+            while(spBPQueueIsEmpty(bpQueue) == false){
+                spBPQueuePeek(bpQueue, peekElementPointer);
+                if(imageCheck[peekElementPointer->index] < i){ /* This is true only if a feature in image peekElementPointer->index has not previously been found in the queue for feature targetFeatures[i] */
+                    imageResults[peekElementPointer->index] = imageResults[peekElementPointer->index]+1;
+                    imageCheck[peekElementPointer->index] = i; /* This is to avoid counting the same image twice for one feature */
+                }
+                spBPQueueDequeue(bpQueue);
+            }
+        }
+    }
+    spBPQueueDestroy(bpQueue); /* Release allocated memory */
+    free(peekElementPointer);
+    free(imageResults);
+	return imageCheck;
 }
 
-SPBPQueue* kNearestNeighboursTree(const SPConfig configData , SPPoint** pointsArray, SPKDTreeNode* root, SPPoint* targetPoint){
-    SP_CONFIG_MSG* msg = (SP_CONFIG_MSG*) malloc(sizeof(*msg));
-	if((root == NULL || pointsArray == NULL) || targetPoint == NULL)
-		return NULL;
-    SPBPQueue* bpq = spBPQueueCreate(spConfigGetKNN(configData, msg));
-    double* lowLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double));
+int kNearestNeighboursTree(SPBPQueue* bpq , SPKDTreeNode* root, SPPoint* targetPoint){
+	if((root == NULL) || targetPoint == NULL || bpq == NULL){
+        // NULL Input Error, empty array
+		return -1;
+	}
+    double* lowLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double)); /* These arrays are used in the recursion to mark limits */
     double* highLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double));
     int* lowLimitUse = (int*) malloc(spPointGetDimension(targetPoint) * sizeof(int));
     int* highLimitUse = (int*) malloc(spPointGetDimension(targetPoint) * sizeof(int));
-	if(bpq == NULL || ((highLimit == NULL || lowLimit == NULL) || (highLimitUse == NULL || lowLimitUse == NULL))){
+	if(highLimit == NULL || lowLimit == NULL || highLimitUse == NULL || lowLimitUse == NULL){
+        // NULL allocation error
         if(bpq != NULL)
             spBPQueueDestroy(bpq);
         if(highLimit != NULL)
@@ -120,121 +154,109 @@ SPBPQueue* kNearestNeighboursTree(const SPConfig configData , SPPoint** pointsAr
             free(highLimitUse);
         if(lowLimitUse != NULL)
             free(lowLimitUse);
-        return NULL;
+        return -2;
 	}
-	int i = 0;
-    for(i = 0; i<spPointGetDimension(targetPoint) ; i++){
-        highLimit[i] = 0;
-        lowLimit[i] = 0;
-        highLimitUse[i] = 0;
-        lowLimitUse[i] = 0;
+    for(int i = 0; i<spPointGetDimension(targetPoint) ; i++){
+        highLimit[i] = 0; /* highLimit[i] is the highest possible value of coordinate i in the current kd subtree in kNearestNeighboursRecursion */
+        lowLimit[i] = 0; /* lowLimit[i] is the lowest possible value of coordinate i in the current kd subtree in kNearestNeighboursRecursion */
+        highLimitUse[i] = 0; /* highLimitUse[i] is 0 if there is no limit on the highest possible value of coordinate i in the current kd subtree in kNearestNeighboursRecursion */
+        lowLimitUse[i] = 0; /* lowLimitUse[i] is 0 if there is no limit on the lowest possible value of coordinate i in the current kd subtree in kNearestNeighboursRecursion */
     }
-    kNearestNeighboursRecursion(bpq, pointsArray, root, targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse);
-    free(highLimit);
+    kNearestNeighboursRecursion(bpq, root, targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse); /* Recursion function */
+    free(highLimit); /* Freeing the allocated memory */
     free(lowLimit);
     free(highLimitUse);
     free(lowLimitUse);
-    free(msg);
-	return bpq;
+	return 1;
 }
 
-void kNearestNeighboursRecursion(SPBPQueue* bpq, SPPoint** pointsArray, SPKDTreeNode* curr, SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse){
+void kNearestNeighboursRecursion(SPBPQueue* bpq, SPKDTreeNode* curr, SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse){
     if(curr != NULL){
-        if(isLeaf(curr)){
-            spBPQueueEnqueue(bpq, spPointGetIndex(getData(curr)), spPointL2SquaredDistance(targetPoint, getData(curr)));
+        if(curr->data != NULL){ /* If root is a leaf, try to add the index of the point and its distance from targetPoint to the queue */
+            spBPQueueEnqueue(bpq, spPointGetIndex(curr->data), spPointL2SquaredDistance(targetPoint, curr->data));
         }
         else{
-            int cont = 1;
-            int currentDimIndex = curr->dim -1;
-            double currentLowLimit = lowLimit[currentDimIndex];
+            bool cont = true; /* If cont becomes false, the next subtree will be skipped */
+            int currentDimIndex = curr->dim -1; /* The indexes are 0 to d-1, while dim are 1 to d */
+            double currentLowLimit = lowLimit[currentDimIndex]; /* The current limits of the splitting dimension are saved */
             double currentHighLimit = highLimit[currentDimIndex];
             int currentLowLimitUse = lowLimitUse[currentDimIndex];
             int currentHighLimitUse = highLimitUse[currentDimIndex];
 
-            highLimit[currentDimIndex] = curr->val;
+            highLimit[currentDimIndex] = curr->val; /* The limits are changed to those of the left subtree */
             highLimitUse[currentDimIndex] = 1;
             if(spBPQueueIsFull(bpq) == true){
                 if(minDistanceSquared(targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse) >= spBPQueueMaxValue(bpq))
-                    cont = 0;
+                    cont = false; /* The left subtree is skipped only if the distance between the target point and the closest  */
+            } /* point within the limits, is bigger than the distance between the target point and the furthest point in the full queue. */
+            if(cont == true){ /* Recursion on the left subtree */
+                kNearestNeighboursRecursion(bpq, curr->left, targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse);
             }
-            if(cont == 1){
-                kNearestNeighboursRecursion(bpq, pointsArray, curr->left, targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse);
-            }
-            highLimit[currentDimIndex] = currentHighLimit;
+            highLimit[currentDimIndex] = currentHighLimit; /* The limits of the splitting dimension are restored */
             highLimitUse[currentDimIndex] = currentHighLimitUse;
+            cont = true;
 
-            lowLimit[currentDimIndex] = curr->val;
+            lowLimit[currentDimIndex] = curr->val; /* The limits are changed to those of the right subtree */
             lowLimitUse[currentDimIndex] = 1;
             if(spBPQueueIsFull(bpq) == true){
                 if(minDistanceSquared(targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse) >= spBPQueueMaxValue(bpq))
-                    cont = 0;
+                    cont = false; /* The right subtree is skipped only if the distance between the target point and the closest  */
+            } /* point within the limits, is bigger than the distance between the target point and the furthest point in the full queue. */
+            if(cont == true){ /* Recursion on the right subtree */
+                kNearestNeighboursRecursion(bpq, curr->right, targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse);
             }
-            if(cont == 1){
-                kNearestNeighboursRecursion(bpq, pointsArray, curr->right, targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse);
-            }
-            lowLimit[currentDimIndex] = currentLowLimit;
+            lowLimit[currentDimIndex] = currentLowLimit; /* The limits of the splitting dimension are restored */
             lowLimitUse[currentDimIndex] = currentLowLimitUse;
         }
     }
 }
 
 double minDistanceSquared(SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse){
-    double* closestPointCoor = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double));
-    int i = 0;
-    for(i = 0; i<spPointGetDimension(targetPoint) ; i++){
-        closestPointCoor[i]=spPointGetAxisCoor(targetPoint, i);
-        if(lowLimitUse[i] == 1){
-            if(closestPointCoor[i] < lowLimit[i])
-                closestPointCoor[i]=lowLimit[i];
+    if(targetPoint == NULL || highLimit == NULL || lowLimit == NULL || highLimitUse == NULL || lowLimitUse == NULL){
+        // NULL input error
+        return 0;
+    }
+    double res = 0;
+    for(int i = 0; i<spPointGetDimension(targetPoint) ; i++){
+        if(lowLimitUse[i] == 1){ /* res will be more than 0 in dimensions in which there are limits and targetPoint is outside the limits */
+            if(spPointGetAxisCoor(targetPoint, i) < lowLimit[i]){
+                res = res+ (lowLimit[i] - spPointGetAxisCoor(targetPoint, i))*(lowLimit[i] - spPointGetAxisCoor(targetPoint, i));
+            }
         }
         if(highLimitUse[i] == 1){
-            if(closestPointCoor[i] > highLimit[i])
-                closestPointCoor[i]=highLimit[i];
+            if(spPointGetAxisCoor(targetPoint, i) > highLimit[i]){
+                res = res+ (spPointGetAxisCoor(targetPoint, i) - highLimit[i])*(spPointGetAxisCoor(targetPoint, i) - highLimit[i]);
+            }
         }
     }
-    SPPoint* closestPoint =spPointCreate(closestPointCoor, spPointGetDimension(targetPoint) , 1);
-    double res = spPointL2SquaredDistance(targetPoint, closestPoint);
-    free(closestPointCoor);
-    spPointDestroy(closestPoint);
     return res;
 }
 
-bool isLeaf(SPKDTreeNode* curr){
-	if(curr == NULL)
-		return false;
-	if(curr->data == NULL)
-		return false;
-	return true;
-}
-
-SPPoint* getData(SPKDTreeNode* curr){
-	if(curr == NULL)
-		return NULL;
-	return curr->data;
-}
-
-SPKDTreeNode* getLeft(SPKDTreeNode* curr){
-	if(curr == NULL)
-		return NULL;
-	return curr->left;
-}
-
-SPKDTreeNode* getRight(SPKDTreeNode* curr){
-	if(curr == NULL)
-		return NULL;
-	return curr->right;
-}
-
-int getSplitDimension(SPKDTreeNode* curr){
-	if(curr == NULL)
-		return -2;
-	return curr->dim;
-}
-
-double getMedianValue(SPKDTreeNode* curr){
-	if(curr == NULL)
-		return 0;
-	return curr->val;
+SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeatures, KD_METHOD splitMethod){
+    int totalSize = 0;
+    if(numOfFeatures != NULL){
+        for(int i=0; i<numOfImages; i++) /* Loop to count the total number of features */
+            totalSize = totalSize + numOfFeatures[i];
+    }
+    if(totalSize <1 || mat == NULL){
+        //NULL input error
+        return NULL;
+    }
+    SPPoint** allPoints = (SPPoint**) malloc(totalSize * sizeof(*allPoints));
+    if(allPoints == NULL){
+        //NULL allocation error
+        return NULL;
+    }
+    int k = 0;
+    for(int i = 0; i<numOfImages; i++){
+        for(int j = 0; j < numOfFeatures[i]; j++){
+            allPoints[k] = mat[i][j]; /* Adds all the features into one array */
+            k = k+1;
+        }
+    }
+    SPKDTreeNode* root = spKDTreeInit(splitMethod , allPoints, totalSize); /* Makes array into kd tree */
+    free(allPoints);
+    return root;
 }
 
 /**
@@ -249,116 +271,19 @@ void spKDTreeDestroy(SPKDTreeNode* curr){
     }
 }
 
-
-
-SPKDTreeNode* spKDTreeInitNoConfig(int splitMethod , SPPoint** pointsArray, int pointsArraySize){
-	if(pointsArray == NULL || pointsArraySize < 1)
+// Useless except for checking:
+SPBPQueue* kNearestNeighbours(KD_METHOD splitMethod, int kNN , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint){
+	if(pointsArray == NULL || targetPoint == NULL || pointsArraySize < 1){
+        //NULL input error
 		return NULL;
-	SPKDArray* kdA = spKDArrayInit(pointsArray, pointsArraySize);
-	if(kdA == NULL)
-		return NULL;
-    return spKDTreeInitRecursionNoConfig(splitMethod, kdA, 0);
-}
-
-SPKDTreeNode* spKDTreeInitRecursionNoConfig(int splitMethod , SPKDArray* kdA, int coorSplit){
-	SPKDTreeNode* newNode = (SPKDTreeNode*) malloc(sizeof(*newNode));
-	if(newNode == NULL)
-		return NULL;
-	if(spKDArrayGetSize(kdA) == 1){
-		newNode->left = NULL;
-		newNode->right = NULL;
-		newNode->dim = -1;
-		newNode->val = 0;
-		newNode->data = (spKDArrayGetArray(kdA))[0];
 	}
-	else{
-		int n = spKDArrayGetSize(kdA);
-		int d = spKDArrayGetDimension(kdA);
-		int i = 0;
-		double maxSpread = 0;
-		double currentSpread = 0;
-		if(splitMethod == 2) // INCREMENTAL
-		{
-			coorSplit = coorSplit+1;
-			if(coorSplit > d)
-				coorSplit = 1;
-		}
-		if(splitMethod == 0) // RANDOM
-		{
-			coorSplit = (rand() % d) + 1;
-		}
-		if(splitMethod == 1) // MAX_SPREAD
-		{
-			coorSplit = 1;
-			for(i = 0; i<d; i++){
-				currentSpread = spPointGetAxisCoor((spKDArrayGetArray(kdA))[(spKDArrayGetIndicesByDim(kdA, i+1))[n-1]],i) - spPointGetAxisCoor((spKDArrayGetArray(kdA))[(spKDArrayGetIndicesByDim(kdA, i+1))[0]],i);
-				if(maxSpread < currentSpread){
-					maxSpread = currentSpread;
-					coorSplit = i+1;
-				}
-			}
-		}
-		SPKDArray** kdASplit = spKDArraySplit(kdA, coorSplit);
-		newNode->dim = coorSplit;
-		i = n;
-		if(n % 2 == 1)
-			i = i-1;
-		i = (int)(i/2);
-		newNode->val = spPointGetAxisCoor((spKDArrayGetArray(kdA))[(spKDArrayGetIndicesByDim(kdA, coorSplit))[i]],coorSplit-1);
-		newNode->data = NULL;
-		newNode->left = spKDTreeInitRecursionNoConfig(splitMethod, kdASplit[0], coorSplit);
-		newNode->right = spKDTreeInitRecursionNoConfig(splitMethod, kdASplit[1], coorSplit);
-		free(kdASplit);
-		spKDArrayDestroy(kdA);
+    SPKDTreeNode* root = spKDTreeInit(splitMethod , pointsArray, pointsArraySize);
+	if(root == NULL){
+		return NULL; /* The error is specified in spKDTreeInit */
 	}
-    return newNode;
-}
-
-
-SPBPQueue* kNearestNeighboursNoConfig(int splitMethod, int kNN , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint){
-	if( (pointsArray == NULL || targetPoint == NULL) || pointsArraySize < 1)
-		return NULL;
-    SPKDTreeNode* root = spKDTreeInitNoConfig(splitMethod , pointsArray, pointsArraySize);
-	if(root == NULL)
-		return NULL;
-    SPBPQueue* bpq = kNearestNeighboursTreeNoConfig(kNN , pointsArray, root, targetPoint);
+	SPBPQueue* bpq = spBPQueueCreate(kNN);
+    kNearestNeighboursTree(bpq , root, targetPoint);
     spKDTreeDestroy(root);
-	return bpq;
-}
-
-SPBPQueue* kNearestNeighboursTreeNoConfig(int kNN , SPPoint** pointsArray, SPKDTreeNode* root, SPPoint* targetPoint){
-	if((root == NULL || pointsArray == NULL) || targetPoint == NULL)
-		return NULL;
-    SPBPQueue* bpq = spBPQueueCreate(kNN);
-    double* lowLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double));
-    double* highLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double));
-    int* lowLimitUse = (int*) malloc(spPointGetDimension(targetPoint) * sizeof(int));
-    int* highLimitUse = (int*) malloc(spPointGetDimension(targetPoint) * sizeof(int));
-	if(bpq == NULL || ((highLimit == NULL || lowLimit == NULL) || (highLimitUse == NULL || lowLimitUse == NULL))){
-        if(bpq != NULL)
-            spBPQueueDestroy(bpq);
-        if(highLimit != NULL)
-            free(highLimit);
-        if(lowLimit != NULL)
-            free(lowLimit);
-        if(highLimitUse != NULL)
-            free(highLimitUse);
-        if(lowLimitUse != NULL)
-            free(lowLimitUse);
-        return NULL;
-	}
-	int i = 0;
-    for(i = 0; i<spPointGetDimension(targetPoint) ; i++){
-        highLimit[i] = 0;
-        lowLimit[i] = 0;
-        highLimitUse[i] = 0;
-        lowLimitUse[i] = 0;
-    }
-    kNearestNeighboursRecursion(bpq, pointsArray, root, targetPoint, highLimit, lowLimit, highLimitUse, lowLimitUse);
-    free(highLimit);
-    free(lowLimit);
-    free(highLimitUse);
-    free(lowLimitUse);
 	return bpq;
 }
 
