@@ -429,8 +429,8 @@ int* closestImagesSearch(int kNN, int spNumOfSimilarImages, SPPoint** targetFeat
     }
     int numOfClosestImages = 1; /* The number of closest images found, out of a possible spNumOfSimilarImages */
     int nextIndex = 0;
-    for(int i = 0; i < numOfImages; i++){ /* During this loop, the indices of the spNumOfSimilarImages closest images will be placed in closestImages */
-        for(nextIndex = numOfClosestImages; nextIndex > 0 && imageResults[i] < imageResults[closestImages[nextIndex-1]];nextIndex--);
+    for(int i = 1; i < numOfImages; i++){ /* During this loop, the indices of the spNumOfSimilarImages closest images will be placed in closestImages */
+        for(nextIndex = numOfClosestImages; nextIndex > 0 && imageResults[i] > imageResults[closestImages[nextIndex-1]];nextIndex--);
         if(nextIndex < spNumOfSimilarImages){ /* True if the array is not yet full or if images i is closer than image closestImages[nextIndex] */
             if(numOfClosestImages < spNumOfSimilarImages)
                 numOfClosestImages = numOfClosestImages + 1;
@@ -445,20 +445,3 @@ int* closestImagesSearch(int kNN, int spNumOfSimilarImages, SPPoint** targetFeat
     free(imageCheck);
 	return closestImages;
 }
-
-/* Used in checking, not necessary */
-SPBPQueue* kNearestNeighbours(KD_METHOD splitMethod, int kNN , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint){
-	if(pointsArray == NULL || targetPoint == NULL || pointsArraySize < 1){
-        //NULL input error
-		return NULL;
-	}
-    SPKDTreeNode* root = spKDTreeInit(splitMethod , pointsArray, pointsArraySize);
-	if(root == NULL){
-		return NULL; /* The error is specified in spKDTreeInit */
-	}
-	SPBPQueue* bpq = spBPQueueCreate(kNN);
-    kNearestNeighboursTree(bpq , root, targetPoint);
-    spKDTreeDestroy(root);
-	return bpq;
-}
-
