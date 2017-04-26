@@ -4,8 +4,30 @@
 
 /**
  * SP Bounded Priority Queue summary
+ * This data structure holds elements that consist of an integer, index, and a double, value.
+ * The elements are sorted by value, from minimum to maximum, and there is a maximum number of
+ * elements the queue can hold (the boundary). If the queue is full, and an element with a lower
+ * value than the maximum value in the queue is sent to be added, the highest value element is
+ * removed from the queue and the new element is put in. If the value of the new element is not
+ * smaller than the maximum, it is not added to the queue.
  *
- * TODO Complete documentation
+ * The following functions are supported:
+ *
+ * spBPQueueCreate      - Initializes a new queue.
+ * spBPQueueCopy 		- Copies a queue.
+ * spBPQueueDestroy		- Frees all allocated memory in a queue.
+ * spBPQueueClear	    - Empties the queue.
+ * spBPQueueSize		- Gets the current number of elements in the queue.
+ * spBPQueueGetMaxSize  - Gets the maximum number of elements in the queue.
+ * spBPQueueEnqueue    	- Tries to insert an element into the queue.
+ * spBPQueueDequeue    	- Removes the element with the lowest value from the queue.
+ * spBPQueuePeek    	- Gets the element with the lowest value in the queue.
+ * spBPQueuePeekLast    - Gets the element with the highest value in the queue.
+ * spBPQueueMinValue    - Gets the minimum value of in the queue.
+ * spBPQueueMaxValue    - Gets the maximum value of in the queue.
+ * spBPQueueIsEmpty    	- Returns true if the queue is empty, false otherwise.
+ * spBPQueueIsFull    	- Returns true if the queue is full, false otherwise.
+ * TODO Complete documentation ?
  */
 
 
