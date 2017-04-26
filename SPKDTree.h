@@ -33,8 +33,6 @@
  * closestImagesSearch 	        - Finds the closest points to all features of a target image, and returns the indices
  *                                of the images with the highest number of similar features. Uses kNearestNeighboursTree.
  *
- * kNearestNeighbours     		- Unused in main project, used for checking
- *
  */
 
 /** Type for defining the tree node **/
@@ -187,8 +185,5 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
  * Otherwise, the array of closest image indices is returned
  */
 int* closestImagesSearch(int kNN, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages);
-
-/* Used in checking, not necessary */
-SPBPQueue* kNearestNeighbours(KD_METHOD splitMethod, int kNN , SPPoint** pointsArray, int pointsArraySize, SPPoint* targetPoint);
 
 #endif // SPKDTREE_H_INCLUDED
