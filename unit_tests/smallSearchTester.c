@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "SPPoint.h"
-#include "SPKDArray.h"
-#include "SPBPQ.h"
-#include "SPBPriorityQueue.h"
-#include "SPKDTree.h"
-#include "SPConfig.h"
+#include "../SPPoint.h"
+#include "../SPKDArray.h"
+#include "../SPBPriorityQueue.h"
+#include "../SPKDTree.h"
 
 int main()
 {
@@ -68,7 +66,8 @@ int main()
     int kNN = 2;
     int targetImage = 1;
     int numOfClosest = numOfImages;
-    int* closest1 = closestImagesSearch(kNN, numOfClosest, m[targetImage], numOfFeatures[targetImage], tIncremental, numOfImages);
+    int* closest1 = (int*) malloc(sizeof(int) * numOfClosest);
+    closestImagesSearch(kNN, closest1, numOfClosest, m[targetImage], numOfFeatures[targetImage], tIncremental, numOfImages);
     printf("\n\n%d closest neighbours to point %d test (kNN: %d): \n\n", numOfClosest, targetImage, kNN);
     for(int i = 0; i<numOfClosest; i++)
         printf("%d , ", closest1[i]);
