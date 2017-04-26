@@ -1,5 +1,4 @@
 #include <malloc.h>
-#include <assert.h>
 #include "SPBPriorityQueue.h"
 
 
@@ -66,12 +65,14 @@ void spBPQueueClear(SPBPQueue* source) {
 }
 
 int spBPQueueSize(SPBPQueue* source) {
-	assert(source != NULL);
+	if(source == NULL)
+        return 0;
 	return source->size;
 }
 
 int spBPQueueGetMaxSize(SPBPQueue* source) {
-	assert(source != NULL);
+	if(source == NULL)
+        return 0;
 	return source->maxSize;
 }
 
@@ -130,8 +131,8 @@ SP_BPQUEUE_MSG spBPQueuePeek(SPBPQueue* source, BPQueueElement* res) {
 	if (source->size <= 0)
 		return SP_BPQUEUE_EMPTY;
 
-	res->index = source->elements[source->size-1].index;
-	res->value = source->elements[source->size-1].value;
+    int i = source->elements[source->size-1].index; // temp
+    double v = source->elements[source->size-1].value; // temp
 	return SP_BPQUEUE_SUCCESS;
 }
 
@@ -148,23 +149,29 @@ SP_BPQUEUE_MSG spBPQueuePeekLast(SPBPQueue* source, BPQueueElement* res) {
 }
 
 double spBPQueueMinValue(SPBPQueue* source) {
-	assert(source != NULL);
-	assert(!spBPQueueIsEmpty(source));
+	if(source == NULL)
+        return -1;
+	if(spBPQueueIsEmpty(source));
+        return -1;
 	return source->elements[source->size-1].value;
 }
 
 double spBPQueueMaxValue(SPBPQueue* source) {
-	assert(source != NULL);
-	assert(!spBPQueueIsEmpty(source));
+	if(source == NULL)
+        return -1;
+    if(source->size == 0)
+        return -1;
 	return source->elements[0].value;
 }
 
 bool spBPQueueIsEmpty(SPBPQueue* source) {
-	assert(source != NULL);
+	if(source == NULL)
+        return true;
 	return source->size == 0;
 }
 
 bool spBPQueueIsFull(SPBPQueue* source) {
-	assert(source != NULL);
+	if(source == NULL)
+        return true;
 	return source->size == source->maxSize;
 }
