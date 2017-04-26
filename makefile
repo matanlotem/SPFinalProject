@@ -1,7 +1,7 @@
 CC = gcc
 CPP = g++
 #put all your object files here
-OBJS = main.o SPImageProc.o SPPoint.o SPConfig.o SPLogger.o main_aux.o #SPDKArray.o 
+OBJS = main.o SPImageProc.o SPPoint.o SPConfig.o SPLogger.o main_aux.o SPKDTree.o SPKDArray.o SPBPriorityQueue.o 
 #The executabel filename
 EXEC = SPCBIR
 INCLUDEPATH=/usr/local/lib/opencv-3.1.0/include/
@@ -35,8 +35,12 @@ SPConfig.o: SPConfig.c SPConfig.h
 	$(CC) $(C_COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
 	$(CC) $(C_COMP_FLAG) -c $*.c
-#SPKDArray.o: SPKDArray.c SPKDArray.h 
-#	$(CC) $(C_COMP_FLAG) -c $*.c
+SPBPriorityQueue.o: SPBPriorityQueue.c SPBPriorityQueue.h 
+	$(CC) $(C_COMP_FLAG) -c $*.c
+SPKDArray.o: SPKDArray.c SPKDArray.h 
+	$(CC) $(C_COMP_FLAG) -c $*.c
+SPKDTree.o: SPKDTree.c SPKDTree.h SPKDArray.h SPBPriorityQueue.h 
+	$(CC) $(C_COMP_FLAG) -c $*.c
 
 clean:
 	rm -f $(OBJS) $(EXEC)

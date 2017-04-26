@@ -48,19 +48,20 @@
 #define ERRORMSG_CONFIG_DEFAULT "The default configuration file %s could not be opened"
 #define ERRORMSG_INIT_LOGGER "Failed initializing logger"
 
-//#define ERRORMSG_FEATS_LOAD_NOF "Invalid number of features"
 #define ERRORMSG_FEATS_LOAD_OPEN "Could not open %s features file for reading"
 #define ERRORMSG_FEATS_LOAD_FRMT "File format does not match number of features and PCA dimension"
 #define INFOMSG_FEATS_LOAD_SUCCESS "Successfully loaded image %d features file"
 
-//#define ERRORMSG_FEATS_SAVE_NULL "Cannot save NULL features"
 #define ERRORMSG_FEATS_INDEX "Index %d out of range"
 #define ERRORMSG_FEATS_SAVE_OPEN "Could not open %s features file for writing"
 #define INFOMSG_FEATS_SAVE_SUCCESS "Successfully saved image %d features file"
 
 #define ERRORMSG_FEATS_GET "Failed extracting/loading image %d features"
+#define ERRORMSG_KDTREE_CREATE "Failed initializing features kd-tree"
 #define INFOMSG_START_PRE "Starting preprocessing"
 #define INFOMSG_DONE_PRE "Done preprocessing"
+
+#define ERRORMSG_COLSEST_IMAGE_SEARCH "Failed searching for closest images"
 
 #define OUTPUTMSG_EXITING "Exiting...\n"
 #define OUTPUTMSG_QUERY "Please enter an image path:\n"

@@ -213,9 +213,9 @@ void spSaveFeaturesFile(int index, SPPoint** feats, int numOfFeatures, const SPC
 	spLoggerPrintInfo(msg);
 }
 
-SPPoint*** spPreprocessing(int** NOFptr, sp::ImageProc imageProc, const SPConfig config) {
+SPKDTreeNode* spPreprocessing(sp::ImageProc imageProc, const SPConfig config) {
 	// validate parameters
-	if (!NOFptr || !config) {
+	if (!config) {
 		spLoggerPrintError(ERRORMSG_NULL_ARGS, __FILE__, __func__, __LINE__);
 		return NULL;
 	}
@@ -226,6 +226,12 @@ SPPoint*** spPreprocessing(int** NOFptr, sp::ImageProc imageProc, const SPConfig
 
 	// get number of images
 	int numOfImages = spConfigGetNumOfImages(config, &configMsg);
+	if (configMsg != SP_CONFIG_SUCCESS) {
+		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
+	// get kd tree split method
+	KD_METHOD splitMethod = spConfigGetKDSplitMethod(config, &configMsg);
 	if (configMsg != SP_CONFIG_SUCCESS) {
 		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
 		return NULL;
@@ -275,10 +281,16 @@ SPPoint*** spPreprocessing(int** NOFptr, sp::ImageProc imageProc, const SPConfig
 			return NULL;
 		}
 	}
-	*NOFptr = numOfFeatures;
+
+	// create KD tree out of all features
+	SPKDTreeNode* featsTree = fullKDTreeCreator(featsDB ,numOfImages, numOfFeatures, splitMethod);
+	if (!featsTree) {
+		spLoggerPrintError(ERRORMSG_KDTREE_CREATE, __FILE__, __func__, __LINE__);
+		return NULL;
+	}
 
 	spLoggerPrintInfo(INFOMSG_DONE_PRE);
-	return featsDB;
+	return featsTree;
 }
 
 SPPoint** spQuery(int* queryNumOfFeatures, char* queryFilename, sp::ImageProc imageProc) {
@@ -304,25 +316,37 @@ SPPoint** spQuery(int* queryNumOfFeatures, char* queryFilename, sp::ImageProc im
 }
 
 int spFindSimilarImages(int* similarImages, SPPoint** queryFeats, int queryNumOfFeatures,
-		SPPoint*** featsDB,int* numOfFeatures, const SPConfig config) {
+		SPKDTreeNode* featsTree, const SPConfig config) {
 	// validate parameters
-	if (!similarImages || !queryFeats || !featsDB || !numOfFeatures || !config) {
+	if (!similarImages || !queryFeats || !featsTree || !config) {
 		spLoggerPrintError(ERRORMSG_NULL_ARGS, __FILE__, __func__, __LINE__);
 		return -1;
 	}
 
+	// get configuration parameters
 	SP_CONFIG_MSG msg;
 	int numOfSimilarImages = spConfigGetNumOfSimilarImages(config, &msg);
 	if (msg != SP_CONFIG_SUCCESS) {
 		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
 		return -1;
 	}
+	int kNN = spConfigGetKNN(config, &msg);
+	if (msg != SP_CONFIG_SUCCESS) {
+		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+	int numOfImages = spConfigGetNumOfImages(config, &msg);
+	if (msg != SP_CONFIG_SUCCESS) {
+		spLoggerPrintError(ERRORMSG_CONFIG_GET, __FILE__, __func__, __LINE__);
+		return -1;
+	}
 
-	//TODO: more similar images than images
-	for (int i=0; i<numOfSimilarImages; i++)
-		similarImages[i] = i;
-	//TODO
-	//findNearest(queryFeats, queryNumOfFeatures, featsDB, numOfFeaturse);
+	// find nearest images
+	if (closestImagesSearch(kNN, similarImages, numOfSimilarImages, queryFeats, queryNumOfFeatures, featsTree, numOfImages) == -1) {
+		spLoggerPrintError(ERRORMSG_COLSEST_IMAGE_SEARCH, __FILE__, __func__, __LINE__);
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -352,7 +376,7 @@ int spShowResults(int* similarImages, char* imageFilename, sp::ImageProc imagePr
 
 	// if not minimal gui - print general message
 	if (!minimalGui)
-		printf(OUTPUTMSG_NON_MINIMAL_GUI, imageFilename); //TODO
+		printf(OUTPUTMSG_NON_MINIMAL_GUI, imageFilename);
 
 	// output for all images
 	for (int i=0; i<numOfSimilarImages; i++) {

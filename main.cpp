@@ -19,9 +19,8 @@ int main(int argc, char* argv[]) {
 		sp::ImageProc imageProc(config);
 
 		// pre-processing
-		int* numOfFeatures;
-		SPPoint*** featsDB = spPreprocessing(&numOfFeatures, imageProc, config);
-		if (!featsDB) {
+		SPKDTreeNode* featsTree = spPreprocessing(imageProc, config);
+		if (!featsTree) {
 			spConfigDestroy(config);
 			return -1;
 		}
@@ -42,7 +41,7 @@ int main(int argc, char* argv[]) {
 			queryFeats = spQuery(&queryNumOfFeatures, queryFilename, imageProc);
 			while (queryFeats) {
 				// find
-				if (spFindSimilarImages(similarImages, queryFeats, queryNumOfFeatures, featsDB, numOfFeatures, config) == -1)
+				if (spFindSimilarImages(similarImages, queryFeats, queryNumOfFeatures, featsTree, config) == -1)
 					break;
 				// show
 				if (spShowResults(similarImages, queryFilename, imageProc, config) == -1)
@@ -55,7 +54,7 @@ int main(int argc, char* argv[]) {
 		// cleanup
 		if (similarImages) free(similarImages);
 		destroySPPoint1D(queryFeats, queryNumOfFeatures);
-		destroySPPoint2D(featsDB,spConfigGetNumOfImages(config, &configMsg), numOfFeatures);
+		spKDTreeDestroy(featsTree);
 		spConfigDestroy(config);
 
 	}

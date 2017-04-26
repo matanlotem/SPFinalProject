@@ -175,15 +175,16 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
  * sorted array, closestImages, and this array is returned.
  *
  * @param kNN - the size of the bounded priority queue
+ * @param closestImages - return parameter - array containing indices of similar images found
  * @param spNumOfSimilarImages - the number of similar images to find
  * @param targetFeatures - the array containing pointers to the features of the target image
  * @param numOfTargetFeatures - the number of features the target image has
  * @param root - the root node of the kd tree containing all the features of the images to search
  * @param numOfImages - the number of images to search. All image indices will be between 0 and numOfImages-1
  *
- * @return NULL in case of allocation failure occurred OR an error in the inputed variables
- * Otherwise, the array of closest image indices is returned
+ * @return -1 in case of allocation failure occurred OR an error in the inputed variables
+ * Otherwise, 0
  */
-int* closestImagesSearch(int kNN, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages);
+int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages);
 
 #endif // SPKDTREE_H_INCLUDED

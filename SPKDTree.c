@@ -373,75 +373,75 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
  * sorted array, closestImages, and this array is returned.
  *
  * @param kNN - the size of the bounded priority queue
+ * @param closestImages - return parameter - array containing indices of similar images found
  * @param spNumOfSimilarImages - the number of similar images to find
  * @param targetFeatures - the array containing pointers to the features of the target image
  * @param numOfTargetFeatures - the number of features the target image has
  * @param root - the root node of the kd tree containing all the features of the images to search
  * @param numOfImages - the number of images to search. All image indices will be between 0 and numOfImages-1
  *
- * @return NULL in case of allocation failure occurred OR an error in the inputed variables
- * Otherwise, the array of closest image indices is returned
+ * @return -1 in case of allocation failure occurred OR an error in the inputed variables
+ * Otherwise, 0
  */
-int* closestImagesSearch(int kNN, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages){
-	if(targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1){
+int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages){
+	if(closestImages, targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1){
         // NULL Input Error, empty array
-		return NULL;
+		return -1;
 	}
-	int* closestImages = (int*) malloc(spNumOfSimilarImages * sizeof(int)); /* closestImages contains the indices of the spNumOfSimilarImages most similar images in order of closeness */
 	int* imageResults = (int*) malloc(numOfImages * sizeof(int)); /* imageResults[i] is the number of features image i has that are close to features in targetFeatures. */
 	int* imageCheck = (int*) malloc(numOfImages * sizeof(int)); /* targetFeatures[imageCheck[i]] is the last feature that was close to a feature in image i. */
 	BPQueueElement* peekElementPointer = (BPQueueElement*) malloc(sizeof(*peekElementPointer)); /* Element required to check the queues */
     SPBPQueue* bpQueue = spBPQueueCreate(kNN); /* This queue will be filled with similar features, and emptied, for each feature in targetFeatures */
-	if(imageResults == NULL || imageCheck == NULL || peekElementPointer == NULL || bpQueue == NULL || closestImages == NULL){
-        // NULL allocation error
-        if(closestImages != NULL)
-            free(closestImages);
-        if(imageResults != NULL)
-            free(imageResults);
-        if(imageCheck != NULL)
-            free(imageCheck);
-        if(peekElementPointer != NULL)
-            free(peekElementPointer);
-        if(bpQueue != NULL)
-            spBPQueueDestroy(bpQueue);
-		return NULL;
+
+    // NULL allocation error
+    if(imageResults == NULL || imageCheck == NULL || peekElementPointer == NULL || bpQueue == NULL){
+        if(imageResults != NULL) free(imageResults);
+        if(imageCheck != NULL) free(imageCheck);
+        if(peekElementPointer != NULL) free(peekElementPointer);
+        if(bpQueue != NULL) spBPQueueDestroy(bpQueue);
+        return -1;
 	}
+
+    // Initialisation of closestImages
     for(int i = 1; i < spNumOfSimilarImages; i++){
-        closestImages[i] = -1; /* Initialisation of closestImages */
+        closestImages[i] = -1;
     }
-    closestImages[0] = 0; /* There is at least 1 image to compare, so there must be a closest image by default */
+    closestImages[0] = 0; // There is at least 1 image to compare, so there must be a closest image by default
     for(int i = 0; i < numOfImages; i++){
-        imageResults[i] = 0; /* Initialisation of imageResults */
-        imageCheck[i] = -1; /* Initialisation of imageCheck */
+        imageResults[i] = 0; // Initialisation of imageResults
+        imageCheck[i] = -1; // Initialisation of imageCheck
     }
-    for(int i = 0; i < numOfTargetFeatures; i++){ /* The main loop */
-        kNearestNeighboursTree(bpQueue , root, targetFeatures[i]); /* Fill bpQueue with close features */
+    for(int i = 0; i < numOfTargetFeatures; i++){ // The main loop
+        kNearestNeighboursTree(bpQueue , root, targetFeatures[i]); // Fill bpQueue with close features
         if(bpQueue != NULL){
             while(spBPQueueIsEmpty(bpQueue) == false){
                 spBPQueuePeek(bpQueue, peekElementPointer);
-                if(imageCheck[peekElementPointer->index] < i){ /* This is true only if a feature in image peekElementPointer->index has not previously been found in the queue for feature targetFeatures[i] */
+                if(imageCheck[peekElementPointer->index] < i){ // This is true only if a feature in image peekElementPointer->index has not previously been found in the queue for feature targetFeatures[i]
                     imageResults[peekElementPointer->index] = imageResults[peekElementPointer->index]+1;
-                    imageCheck[peekElementPointer->index] = i; /* This is to avoid counting the same image twice for one feature */
+                    imageCheck[peekElementPointer->index] = i; // This is to avoid counting the same image twice for one feature
                 }
                 spBPQueueDequeue(bpQueue);
             }
         }
     }
-    int numOfClosestImages = 1; /* The number of closest images found, out of a possible spNumOfSimilarImages */
+    int numOfClosestImages = 1; // The number of closest images found, out of a possible spNumOfSimilarImages
     int nextIndex = 0;
-    for(int i = 1; i < numOfImages; i++){ /* During this loop, the indices of the spNumOfSimilarImages closest images will be placed in closestImages */
+    for(int i = 1; i < numOfImages; i++){ // During this loop, the indices of the spNumOfSimilarImages closest images will be placed in closestImages
         for(nextIndex = numOfClosestImages; nextIndex > 0 && imageResults[i] > imageResults[closestImages[nextIndex-1]];nextIndex--);
-        if(nextIndex < spNumOfSimilarImages){ /* True if the array is not yet full or if images i is closer than image closestImages[nextIndex] */
+        if(nextIndex < spNumOfSimilarImages){ // True if the array is not yet full or if images i is closer than image closestImages[nextIndex]
             if(numOfClosestImages < spNumOfSimilarImages)
                 numOfClosestImages = numOfClosestImages + 1;
             for(int changedIndex = numOfClosestImages-1; changedIndex>nextIndex ; changedIndex--)
-                closestImages[changedIndex] = closestImages[changedIndex-1]; /* The indices of images that are further away than image i need to be moved along closestPoints */
+                closestImages[changedIndex] = closestImages[changedIndex-1]; // The indices of images that are further away than image i need to be moved along closestPoints
             closestImages[nextIndex] = i;
         }
     }
-    spBPQueueDestroy(bpQueue); /* Release allocated memory */
+
+    // Release allocated memory
+    spBPQueueDestroy(bpQueue);
     free(peekElementPointer);
     free(imageResults);
     free(imageCheck);
-	return closestImages;
+
+    return 0;
 }
