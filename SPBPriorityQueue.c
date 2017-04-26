@@ -131,8 +131,8 @@ SP_BPQUEUE_MSG spBPQueuePeek(SPBPQueue* source, BPQueueElement* res) {
 	if (source->size <= 0)
 		return SP_BPQUEUE_EMPTY;
 
-    int i = source->elements[source->size-1].index; // temp
-    double v = source->elements[source->size-1].value; // temp
+	res->index = source->elements[source->size-1].index;
+	res->value = source->elements[source->size-1].value;
 	return SP_BPQUEUE_SUCCESS;
 }
 
