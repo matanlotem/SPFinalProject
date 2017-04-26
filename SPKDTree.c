@@ -384,7 +384,7 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
  * Otherwise, 0
  */
 int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages){
-	if(closestImages, targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1){
+	if(closestImages == NULL || targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1){
         // NULL Input Error, empty array
 		return -1;
 	}

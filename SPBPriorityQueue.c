@@ -151,7 +151,7 @@ SP_BPQUEUE_MSG spBPQueuePeekLast(SPBPQueue* source, BPQueueElement* res) {
 double spBPQueueMinValue(SPBPQueue* source) {
 	if(source == NULL)
         return -1;
-	if(spBPQueueIsEmpty(source));
+	if(spBPQueueIsEmpty(source))
         return -1;
 	return source->elements[source->size-1].value;
 }
