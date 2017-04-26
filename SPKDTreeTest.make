@@ -1,5 +1,5 @@
 CC = gcc
-OBJS = smallSearchTester.o SPKDTree.o SPKDArray.o SPPoint.o SPBPriorityQueue.o
+OBJS = smallSearchTester.o SPKDTree.o SPKDArray.o SPPoint.o SPBPriorityQueue.o SPLogger.o
 EXEC = smallSearchTester
 TESTS_DIR = ./unit_tests
 COMP_FLAG = -std=c99 #-Wall -Wextra \
@@ -15,8 +15,10 @@ SPPoint.o: SPPoint.c SPPoint.h
 	$(CC) $(COMP_FLAG) -c $*.c
 SPKDTree.o: SPKDTree.c SPKDTree.h 
 	$(CC) $(COMP_FLAG) -c $*.c
-SPBPriorityQueue.o: SPPoint.c SPPoint.h 
+SPBPriorityQueue.o: SPBPriorityQueue.o SPBPriorityQueue.o
 	$(CC) $(COMP_FLAG) -c $*.c
-
+SPLogger.o: SPLogger.c SPLogger.h 
+	$(CC) $(COMP_FLAG) -c $*.c
+	
 clean:
 	rm -f $(OBJS) $(EXEC)

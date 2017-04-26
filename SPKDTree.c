@@ -7,6 +7,8 @@
 #include "SPKDTree.h"
 #include "SPBPriorityQueue.h"
 #include "SPConfig.h"
+#include "SPLogger.h"
+#include "SPConsts.h"
 
 /**
  * SPKDTree Summary
@@ -68,7 +70,7 @@ struct kd_tree_node_t {
  */
 SPKDTreeNode* spKDTreeInit(KD_METHOD splitMethod , SPPoint** pointsArray, int pointsArraySize){
 	if(pointsArray == NULL || pointsArraySize < 1){
-        // NULL Input error
+        spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
 		return NULL;
 	}
 	SPKDArray* kdA = spKDArrayInit(pointsArray, pointsArraySize);
@@ -92,7 +94,7 @@ SPKDTreeNode* spKDTreeInit(KD_METHOD splitMethod , SPPoint** pointsArray, int po
 SPKDTreeNode* spKDTreeInitRecursion(KD_METHOD splitMethod , SPKDArray* kdA, int coorSplit){
 	SPKDTreeNode* newNode = (SPKDTreeNode*) malloc(sizeof(*newNode));
 	if(newNode == NULL){
-        // NULL allocation error
+        spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
 		return NULL;
 	}
 	if(spKDArrayGetSize(kdA) == 1){ /* Leaf initialisation */
@@ -159,8 +161,8 @@ SPKDTreeNode* spKDTreeInitRecursion(KD_METHOD splitMethod , SPKDArray* kdA, int 
  * Otherwise, 1 is returned.
  */
 int kNearestNeighboursTree(SPBPQueue* bpq , SPKDTreeNode* root, SPPoint* targetPoint){
-	if((root == NULL) || targetPoint == NULL || bpq == NULL){
-        // NULL Input Error, empty array
+	if(root == NULL || targetPoint == NULL || bpq == NULL){
+		spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
 		return -1;
 	}
     double* lowLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double)); /* These arrays are used in the recursion to mark limits */
@@ -168,7 +170,7 @@ int kNearestNeighboursTree(SPBPQueue* bpq , SPKDTreeNode* root, SPPoint* targetP
     int* lowLimitUse = (int*) malloc(spPointGetDimension(targetPoint) * sizeof(int));
     int* highLimitUse = (int*) malloc(spPointGetDimension(targetPoint) * sizeof(int));
 	if(highLimit == NULL || lowLimit == NULL || highLimitUse == NULL || lowLimitUse == NULL){
-        // NULL allocation error
+        spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
         if(bpq != NULL)
             spBPQueueDestroy(bpq);
         if(highLimit != NULL)
@@ -284,7 +286,7 @@ void kNearestNeighboursRecursion(SPBPQueue* bpq, SPKDTreeNode* curr, SPPoint* ta
  */
 double minDistanceSquared(SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse){
     if(targetPoint == NULL || highLimit == NULL || lowLimit == NULL || highLimitUse == NULL || lowLimitUse == NULL){
-        // NULL input error
+    	spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
         return 0;
     }
     double res = 0;
@@ -385,7 +387,7 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
  */
 int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages){
 	if(closestImages == NULL || targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1){
-        // NULL Input Error, empty array
+		spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
 		return -1;
 	}
 	int* imageResults = (int*) malloc(numOfImages * sizeof(int)); /* imageResults[i] is the number of features image i has that are close to features in targetFeatures. */
@@ -393,7 +395,7 @@ int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, S
 	BPQueueElement* peekElementPointer = (BPQueueElement*) malloc(sizeof(*peekElementPointer)); /* Element required to check the queues */
     SPBPQueue* bpQueue = spBPQueueCreate(kNN); /* This queue will be filled with similar features, and emptied, for each feature in targetFeatures */
 
-    // NULL allocation error
+    spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
     if(imageResults == NULL || imageCheck == NULL || peekElementPointer == NULL || bpQueue == NULL){
         if(imageResults != NULL) free(imageResults);
         if(imageCheck != NULL) free(imageCheck);

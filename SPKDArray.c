@@ -2,6 +2,8 @@
 #include <assert.h>
 #include "SPPoint.h"
 #include "SPKDArray.h"
+#include "SPLogger.h"
+#include "SPConsts.h"
 
 /**
  * SPKDArray Summary
@@ -64,11 +66,11 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             int **a = (int**) malloc(d*sizeof(*a)); /* a is the sorted matrix of indexes */
             iError = -1;
             if(a == NULL)
-                // NULL allocation error
+            	spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
                 return NULL;
             int* tempArray = (int*) malloc(size*sizeof(int)); /* tempArray will help in sort */
             if(tempArray == NULL){
-                // NULL allocation error
+                spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
                 free(a);
                 return NULL;
             }
@@ -86,7 +88,7 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             }
             free(tempArray);
             if(d == -1){
-                // NULL allocation error
+                spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
                 for(int i = 0; i < iError ; i++){
                     free(a[i]);
                 }
@@ -95,7 +97,7 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             }
             SPPoint** dataCopy = spCopyPointArray(arr , size);
             if(dataCopy == NULL){
-                // NULL allocation error
+                spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
                 for(int i = 0; i<d ; i++){
                     free(a[i]);
                 }
@@ -105,7 +107,7 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             SPKDArray* res = spKDArrayInitPreSorted(dataCopy, a, size , d);
             if(res == NULL)
             {
-                // NULL allocation error
+                spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
                 for(int i = 0; i<d ; i++)
                     free(a[i]);
                 free(a);
@@ -115,7 +117,9 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             return res;
         }
     }
-    // NULL input error (NULL array or some points have different dimensions than others)
+
+    // (NULL array or some points have different dimensions than others)
+    spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
     return NULL;
 }
 
@@ -157,7 +161,7 @@ SPKDArray* spKDArrayInitPreSorted(SPPoint** data, int** a, int size , int d){
  */
 SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor){
     if(kdArr == NULL){
-        // NULL input error
+        spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
         return NULL;
     }
     if((coor < 1 || coor > kdArr->dim) || kdArr->size < 2){
@@ -203,7 +207,7 @@ SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor){
         }
     }
     if((((dataRight == NULL || dataLeft == NULL) || (res == NULL || tempSplitArray == NULL)) || (aRight == NULL || aLeft == NULL)) || (tempNewIndex == NULL || kError != 0)){
-        // NULL allocation error
+        spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
         if(res != NULL)
             free(res);
         if(tempNewIndex != NULL)
@@ -285,7 +289,7 @@ SPPoint** spCopyPointArray(SPPoint** base, int size ){
             }
             return res;
         }
-        // NULL allocation error
+        spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
         return NULL;
     }
     // NULL input error
