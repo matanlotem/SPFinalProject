@@ -31,8 +31,10 @@ typedef struct kd_array_t SPKDArray;
  * an index of an SPPoint in the array.
  * Each row is sorted by the coordinates of the points in the row number dimension.
  *
- * @return
- * NULL in case allocation failure occurred OR arr is NULL OR not all the dimensions are the same
+ * @param arr - the array of pointers to points
+ * @param size - the number of pointers to points
+ *
+ * @return NULL in case allocation failure occurred OR arr is NULL OR not all the dimensions are the same
  * Otherwise, the new KD Array is returned
  */
 SPKDArray* spKDArrayInit(SPPoint** arr, int size);
@@ -41,8 +43,12 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size);
  * Initializes a new KD array using the sorted matrix given as input.
  * Requires the matrix to be sorted correctly in each row.
  *
- * @return
- * The new KD Array is returned (NULL in case of allocation error)
+ * @param data - the array of pointers to points
+ * @param a - the sorted matrix of indices
+ * @param size - the number of pointers to points
+ * @param d - the dimensions of each point
+ *
+ * @return The new KD Array is returned (NULL in case of allocation error)
  */
 SPKDArray* spKDArrayInitPreSorted(SPPoint** data, int** a, int size , int d);
 
@@ -52,8 +58,10 @@ SPKDArray* spKDArrayInitPreSorted(SPPoint** data, int** a, int size , int d);
  * with the points with the lower coordinates in that dimension in one KD array,
  * and the rest in the other.
  *
- * @return
- * The output is an array of 2 KD Array pointers, the first being kdLeft and the second kdRight.
+ * @param kdArr - the kd array to split
+ * @param coor - the dimension to split by (a number from 1 to d, not the index from 0 to d-1)
+ *
+ * @return The output is an array of 2 KD Array pointers, the first being kdLeft and the second kdRight.
  * NULL is returned in case of allocation error.
  */
 SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor);
@@ -61,8 +69,10 @@ SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor);
 /**
  * Makes a new copy of an SPPoint pointers array, base, with size elements.
  *
- * @return
- * The copy is returned (NULL in case of allocation error)
+ * @param base - the array of pointers to points to copy
+ * @param size - the number of pointers to points
+ *
+ * @return The copy is returned (NULL in case of allocation error)
  */
 SPPoint** spCopyPointArray(SPPoint** base, int size );
 
@@ -71,45 +81,57 @@ SPPoint** spCopyPointArray(SPPoint** base, int size );
  * The sort is logarithmic, complexity O(size log(size)). It requires an int array, tempArray, with size elements
  * for temporary sorting purposes, since it would be less efficient to reallocate memory to one each time sort is called.
  *
- * @return
- * 1 if sort succeeded (-1 in case of error)
+ * @param a - the matrix of indices
+ * @param data - the array of pointers to points
+ * @param size - the number of pointers to points (number of columns in a)
+ * @param d - the index of the row to sort in a
+ * @param tempArray - a temporary array with the same size as the row in a
+ *
+ * @return 1 if sort succeeded (-1 in case of error)
  */
 int spSortPointArrayByDimension(int** a , SPPoint** data, int size, int d , int* tempArray);
 
 /**
  * Returns the dimension of the points in the KD array.
  *
- * @return
- * The output is dim.
+ * @param kdA - the kd array
+ *
+ * @return The output is dim.
  */
 int spKDArrayGetDimension(SPKDArray* kdA);
 
 /**
  * Returns the number of points in the KD array.
  *
- * @return
- * The output is size.
+ * @param kdA - the kd array
+ *
+ * @return The output is size.
  */
 int spKDArrayGetSize(SPKDArray* kdA);
 
 /**
  * Returns the array of points in the KD array.
  *
- * @return
- * The output is arr.
+ * @param kdA - the kd array
+ *
+ * @return The output is arr.
  */
 SPPoint** spKDArrayGetArray(SPKDArray* kdA);
 
 /**
- * Returns the indeices of the array of points, a sorted by their dim coordinate.
+ * Returns the indices of the array of points, a sorted by their dim coordinate.
  *
- * @return
- * The output is arrIndices[dim-1].
+ * @param kdA - the kd array
+ * @param dim - the dimension number, from 1 to d
+ *
+ * @return The output is arrIndices[dim-1].
  */
 int* spKDArrayGetIndicesByDim(SPKDArray* kdA, int dim);
 
 /**
  * Frees all allocated memory of kdA.
+ *
+ * @param kdA - the kd array
  *
  */
 void spKDArrayDestroy(SPKDArray* kdA);
