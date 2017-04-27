@@ -37,9 +37,10 @@
 #define SP_CONFIG_INVAlID_VAL_MSG "Invalid value - constraint not met"
 
 #define ERRORMSG_NULL_ARGS "NULL arguments passed"
+#define ERRORMSG_INVALID_ARGS "Invalid arguments passed"
 
 #define ERRORMSG_CONFIG "Config file not defined"
-#define ERRORMSG_UNKOWN "Unkown error!"
+#define ERRORMSG_UNKOWN "Unknown error!"
 #define ERRORMSG_ALLOCATION "Allocation error"
 #define ERRORMSG_CONFIG_GET "Couldn't config parameter"
 

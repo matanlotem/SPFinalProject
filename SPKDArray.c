@@ -165,7 +165,7 @@ SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor){
         return NULL;
     }
     if((coor < 1 || coor > kdArr->dim) || kdArr->size < 2){
-        // NULL input error
+        spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
         return NULL;
     }
     int n1 = kdArr->size;
@@ -283,7 +283,7 @@ SPPoint** spCopyPointArray(SPPoint** base, int size ){
                 }
             }
             if(iChecker != size){
-                // NULL input error (missing point)
+				spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
                 free(res);
                 return NULL;
             }
@@ -292,7 +292,7 @@ SPPoint** spCopyPointArray(SPPoint** base, int size ){
         spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
         return NULL;
     }
-    // NULL input error
+    spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
     return NULL;
 }
 
@@ -320,17 +320,17 @@ int spSortPointArrayByDimension(int** a , SPPoint** data, int size, int d , int*
                 if(i == 0)
                     dim = spPointGetDimension((data[i]));
                 if(spPointGetDimension((data[i])) != dim){
-                    // NULL input error (wrong dimension of point)
+					spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
                     return -1;
                 }
             }
             else{
-                // NULL input error (missing row in matrix)
+                spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
                 return -1;
             }
         }
         if(a[d] == NULL){
-            // NULL input error (missing row in matrix)
+            spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
             return -1;
         }
         if(tempArray != NULL){

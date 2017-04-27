@@ -340,12 +340,12 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
             totalSize = totalSize + numOfFeatures[i];
     }
     if(totalSize <1 || mat == NULL){
-        //NULL input error
+        spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
         return NULL;
     }
     SPPoint** allPoints = (SPPoint**) malloc(totalSize * sizeof(*allPoints));
     if(allPoints == NULL){
-        //NULL allocation error
+        spLoggerPrintWarning(ERRORMSG_ALLOCATION,__FILE__,__func__,__LINE__);
         return NULL;
     }
     int k = 0;
@@ -387,7 +387,7 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
  */
 int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages){
 	if(closestImages == NULL || targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1){
-		spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
+		spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
 		return -1;
 	}
 	int* imageResults = (int*) malloc(numOfImages * sizeof(int)); /* imageResults[i] is the number of features image i has that are close to features in targetFeatures. */
