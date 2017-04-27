@@ -27,7 +27,6 @@
  * spBPQueueMaxValue    - Gets the maximum value of in the queue.
  * spBPQueueIsEmpty    	- Returns true if the queue is empty, false otherwise.
  * spBPQueueIsFull    	- Returns true if the queue is full, false otherwise.
- * TODO Complete documentation ?
  */
 
 
