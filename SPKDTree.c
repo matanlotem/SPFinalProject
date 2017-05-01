@@ -312,9 +312,7 @@ double minDistanceSquared(SPPoint* targetPoint, double* highLimit, double* lowLi
  * @param curr - the tree node to free
  */
 void spKDTreeDestroy(SPKDTreeNode* curr){
-    if(curr != NULL){
-	if(curr->data != NULL)
-		spPointDestroy(curr->data);
+    if (curr != NULL && curr->data != NULL) {
         spKDTreeDestroy(curr->left);
         spKDTreeDestroy(curr->right);
         free(curr);
@@ -398,7 +396,6 @@ int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, S
 	BPQueueElement* peekElementPointer = (BPQueueElement*) malloc(sizeof(*peekElementPointer)); /* Element required to check the queues */
     SPBPQueue* bpQueue = spBPQueueCreate(kNN); /* This queue will be filled with similar features, and emptied, for each feature in targetFeatures */
 
-    spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
     if(imageResults == NULL || imageCheck == NULL || peekElementPointer == NULL || bpQueue == NULL){
         if(imageResults != NULL) free(imageResults);
         if(imageCheck != NULL) free(imageCheck);
