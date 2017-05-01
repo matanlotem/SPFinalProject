@@ -10,6 +10,7 @@ extern "C" {
 }
 
 #define TEST_DIR "unit_tests/sp_complete/"
+#define FULL_OUTPUT false
 
 SPConfig spInitConfigFname(const char* configFilename) {
 	char* initArgs[3];
@@ -20,6 +21,105 @@ SPConfig spInitConfigFname(const char* configFilename) {
 	return spInit(3, initArgs);
 }
 
+
+bool spInitTest() {
+	SPConfig config;
+
+	// default init
+	config = spInit(1, NULL);
+	ASSERT_TRUE(config);
+	spConfigDestroy(config);
+	spLoggerDestroy();
+
+	// init with filename
+	config = spInitConfigFname(TEST_DIR "myconfig.config");
+	ASSERT_TRUE(config);
+	spConfigDestroy(config);
+	spLoggerDestroy();
+
+	// init with wrong number of arguments
+	ASSERT_FALSE(spInit(2, NULL));
+	// init with non existent config file
+	ASSERT_FALSE(spInitConfigFname(TEST_DIR "blaaa.config"));
+
+	return true;
+}
+
+bool preprocessingTest() {
+	// initialize everything
+	SP_CONFIG_MSG configMsg;
+	SPConfig config = spInitConfigFname(TEST_DIR "myconfig.config");
+	ASSERT_TRUE(config);
+	sp::ImageProc imageProc(config);
+	SPKDTreeNode* featsTree = spPreprocessing(imageProc, config);
+	ASSERT_TRUE(featsTree);
+
+	// cleanup
+	spKDTreeDestroy(featsTree);
+	spConfigDestroy(config);
+	spLoggerDestroy();
+
+	return true;
+}
+
+bool queryTest() {
+	// initialize everything
+	SP_CONFIG_MSG configMsg;
+	SPConfig config = spInitConfigFname(TEST_DIR "myconfig.config");
+	ASSERT_TRUE(config);
+	sp::ImageProc imageProc(config);
+
+	// parse query
+	int queryNumOfFeatures;
+	char queryImageFilename[STR_LEN];
+	ASSERT_TRUE(spConfigGetImagePath(queryImageFilename, config, 9) == SP_CONFIG_SUCCESS);
+	SPPoint** queryFeats = imageProc.getImageFeatures(queryImageFilename, 0, &queryNumOfFeatures);
+	ASSERT_TRUE(queryFeats);
+
+	// cleanup
+	destroySPPoint1D(queryFeats, queryNumOfFeatures);
+	spConfigDestroy(config);
+	spLoggerDestroy();
+
+	return true;
+}
+
+
+bool basicCompleteTest() {
+	// initialize everything
+	SP_CONFIG_MSG configMsg;
+	SPConfig config = spInitConfigFname(TEST_DIR "myconfig.config");
+	ASSERT_TRUE(config);
+	sp::ImageProc imageProc(config);
+	SPKDTreeNode* featsTree = spPreprocessing(imageProc, config);
+	ASSERT_TRUE(featsTree);
+
+	// get interesting parameters
+	int numOfImages = spConfigGetNumOfImages(config, &configMsg);
+	ASSERT_TRUE(configMsg == SP_CONFIG_SUCCESS);
+	int numOfSimilarImages = spConfigGetNumOfSimilarImages(config, &configMsg);
+	ASSERT_TRUE(configMsg == SP_CONFIG_SUCCESS);
+	int* similarImages = (int*) malloc(sizeof(int) * numOfSimilarImages);
+	ASSERT_TRUE(similarImages);
+	int queryNumOfFeatures;
+	char queryImageFilename[STR_LEN];
+	SPPoint** queryFeats;
+
+	// find similar images
+	ASSERT_TRUE(spConfigGetImagePath(queryImageFilename, config, 9) == SP_CONFIG_SUCCESS);
+	queryFeats = imageProc.getImageFeatures(queryImageFilename, 0, &queryNumOfFeatures);
+	ASSERT_TRUE(queryFeats);
+	ASSERT_TRUE(spFindSimilarImages(similarImages, queryFeats, queryNumOfFeatures, featsTree, config) == 0);
+	destroySPPoint1D(queryFeats, queryNumOfFeatures);
+
+	// cleanup
+	spKDTreeDestroy(featsTree);
+	free(similarImages);
+	spConfigDestroy(config);
+	spLoggerDestroy();
+
+	return true;
+}
 
 bool selfImageTestConfigFname(const char* configFname) {
 	if (FULL_OUTPUT)
@@ -84,6 +184,10 @@ bool selfImageTest() {
 
 int main(int argc, char* argv[]) {
 	if (argc > 1) printf("%s\n",argv[0]);
-	RUN_TEST(selfImageTest);
+	RUN_TEST(spInitTest);
+	RUN_TEST(preprocessingTest);
+	RUN_TEST(queryTest);
+	//RUN_TEST(basicCompleteTest);
+	//RUN_TEST(selfImageTest);
 	return 0;
 }

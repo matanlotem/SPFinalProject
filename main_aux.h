@@ -11,7 +11,18 @@ extern "C" {
 }
 
 
-
+/* Load configuration file and initialize logger
+ * Validates input argument are of correct format
+ *
+ * @param argc - the number of arguments passed to the main function
+ * 				 must be either 1 or 3 (otherwise fails)
+ * @param argv - array of strings passed to the main function
+ * 				 if argc is 3 then argv[1] must be "-c" (otherwise fails)
+ * 				 and argv[2] contains a path to the requested configuration file
+ *
+ * @return loaded configuration file on success
+ * 		   and NULL on failure (wrong usage, non existent configuration file)
+ */
 SPConfig spInit(int argc, char* argv[]);
 
 /* Pre-process data structure for nearest image search
