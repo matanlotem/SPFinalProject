@@ -5,6 +5,13 @@
 #include "../SPLogger.h"
 
 
+void destroyPointArray(SPPoint** dataCopy , int size1){
+    if(dataCopy != NULL){
+        for(int i = 0; i < size1; i++)
+            spPointDestroy(dataCopy[i]);
+        free(dataCopy);
+    }
+}
 void printKDArray(SPKDArray* kdA){
     if(kdA != NULL){
         int i = 0;
@@ -51,38 +58,56 @@ int main()
     dataCopy[6] = spPointCreate(coor, dim, index); index++;
 
     SPKDArray* kdA = spKDArrayInit(dataCopy, size1);
+    printf("kdA: ");
     printKDArray(kdA);
-    SPKDArray** kdA2 = spKDArraySplit(kdA ,1);
-    printf("\n\nSplit by first coordinate. kdLeft:\n");
+    SPKDArray** kdA1 = spKDArraySplit(kdA ,1);
+    printf("\n\nkdA Split by first coordinate. kd1Left:\n");
+    printKDArray(kdA1[0]);
+    printf("\nkd1Right:\n");
+    printKDArray(kdA1[1]);
+    SPKDArray** kdA2 = spKDArraySplit(kdA ,2);
+    printf("\n\nkdA Split by second coordinate. kd2Left:\n");
     printKDArray(kdA2[0]);
-    printf("\nkdRight:\n");
+    printf("\nkd2Right:\n");
     printKDArray(kdA2[1]);
-    kdA2 = spKDArraySplit(kdA ,2);
-    printf("\n\nSplit by second coordinate. kdLeft:\n");
-    printKDArray(kdA2[0]);
-    printf("\nkdRight:\n");
-    printKDArray(kdA2[1]);
-    kdA2 = spKDArraySplit(kdA ,3);
-    printf("\n\nSplit by third coordinate. kdLeft:\n");
-    printKDArray(kdA2[0]);
-    printf("\nkdRight:\n");
-    printKDArray(kdA2[1]);
-    printf("Hello world!\n");
-
-    SPKDArray** kdA3 = spKDArraySplit(kdA2[1] ,2);
-    printf("\n\nSplit by first coordinate. kdLeft:\n");
+    SPKDArray** kdA3 = spKDArraySplit(kdA ,3);
+    printf("\n\nkdA Split by third coordinate. kd3Left:\n");
     printKDArray(kdA3[0]);
-    printf("\nkdRight:\n");
+    printf("\nkd3Right:\n");
     printKDArray(kdA3[1]);
 
+    SPKDArray** kdA32 = spKDArraySplit(kdA3[1] ,2);
+    printf("\n\nkd3Right Split by first coordinate. kd32Left:\n");
+    printKDArray(kdA32[0]);
+    printf("\nkd32Right:\n");
+    printKDArray(kdA32[1]);
+
+    SPKDArray** kdA321 = spKDArraySplit(kdA32[0] ,2);
+    printf("\n\nkd32Left Split by first coordinate. kd321Left:\n");
+    printKDArray(kdA321[0]);
+    printf("\nkd321Right:\n");
+    printKDArray(kdA321[1]);
+
     spKDArrayDestroy(kdA);
+    spKDArrayDestroy(kdA321[0]);
+    spKDArrayDestroy(kdA321[1]);
+    free(kdA321);
+    spKDArrayDestroy(kdA32[0]);
+    spKDArrayDestroy(kdA32[1]);
+    free(kdA32);
     spKDArrayDestroy(kdA3[0]);
     spKDArrayDestroy(kdA3[1]);
+    free(kdA3);
     spKDArrayDestroy(kdA2[0]);
     spKDArrayDestroy(kdA2[1]);
     free(kdA2);
-    free(kdA3);
+    spKDArrayDestroy(kdA1[0]);
+    spKDArrayDestroy(kdA1[1]);
+    free(kdA1);
     spLoggerDestroy();
+    free(coor);
+    destroyPointArray(dataCopy , size1);
     return 0;
 }
+
 
