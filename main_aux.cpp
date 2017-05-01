@@ -276,8 +276,15 @@ SPKDTreeNode* spPreprocessing(sp::ImageProc imageProc, const SPConfig config) {
 	SPKDTreeNode* featsTree = fullKDTreeCreator(featsDB ,numOfImages, numOfFeatures, splitMethod);
 	if (!featsTree) {
 		spLoggerPrintError(ERRORMSG_KDTREE_CREATE, __FILE__, __func__, __LINE__);
+		destroySPPoint2D(featsDB, numOfImages, numOfFeatures);
 		return NULL;
 	}
+
+	// free featsDB but leave points (to be freed when tree is destroyed)
+	for (int i=0; i<numOfImages; i++)
+		free(featsDB[i]);
+	free(featsDB);
+	free(numOfFeatures);
 
 	spLoggerPrintInfo(INFOMSG_DONE_PRE);
 	return featsTree;
@@ -302,7 +309,12 @@ SPPoint** spQuery(int* queryNumOfFeatures, char* queryFilename, sp::ImageProc im
 	}
 
 	// else get query features
-	return imageProc.getImageFeatures(queryFilename, 0, queryNumOfFeatures);
+	SPPoint** queryFeats = imageProc.getImageFeatures(queryFilename, 0, queryNumOfFeatures);
+	if (!queryFeats) {
+		printf(OUTPUTMSG_QUERY_PROCESS);
+		printf(OUTPUTMSG_EXITING);
+	}
+	return queryFeats;
 }
 
 int spFindSimilarImages(int* similarImages, SPPoint** queryFeats, int queryNumOfFeatures,

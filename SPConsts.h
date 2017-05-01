@@ -66,6 +66,7 @@
 
 #define ERRORMSG_COLSEST_IMAGE_SEARCH "Failed searching for closest images"
 
+#define OUTPUTMSG_QUERY_PROCESS "Query image could not be processed\n"
 #define OUTPUTMSG_EXITING "Exiting...\n"
 #define OUTPUTMSG_QUERY "Please enter an image path:\n"
 #define OUTPUTMSG_NON_MINIMAL_GUI "Best candidates for - %s - are:\n"
