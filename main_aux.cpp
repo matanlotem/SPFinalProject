@@ -54,11 +54,7 @@ SPConfig spInit(int argc, char* argv[]) {
 }
 
 void destroySPPoint1D(SPPoint **DB, int dim) {
-	/**
-	 * Frees memory of a 1D SPPoint array of size dim
-	 * Assumes dim is the correct dimension of the array
-	 */
-	if (DB != NULL) {
+	if (DB) {
 		for (int i=0; i<dim; i++)
 			spPointDestroy(DB[i]);
 		free(DB);
@@ -66,12 +62,6 @@ void destroySPPoint1D(SPPoint **DB, int dim) {
 }
 
 void destroySPPoint2D(SPPoint ***DB, int dim, int *dim2) {
-	/**
-	 * Frees memory of a 2D SPPoint array (a 1D array of size dim of 1D SPPoint arrays)
-	 * The dimension of array DB[i] is dim2[i]
-	 * Assumes given array dimensions are correct
-	 * Frees dim2 as well
-	 */
 	assert(!DB || dim2);
 	if (DB) {
 		for (int i=0; i<dim; i++)
@@ -113,7 +103,7 @@ SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig confi
 
 	// allocate featutres
 	fscanf(featsFile,"%d\n", numOfFeatures);
-	sprintf(msg, "expected number of features: %d", *numOfFeatures);
+	sprintf(msg, DEBUGMSG_FEATS_EXPECTED_NOF, *numOfFeatures);
 	spLoggerPrintDebug(msg,__FILE__,__func__,__LINE__);
 
 	SPPoint** feats = (SPPoint**) malloc(sizeof(*feats) * *numOfFeatures);
@@ -146,7 +136,7 @@ SPPoint** spLoadFeaturesFile(int index, int* numOfFeatures, const SPConfig confi
 	free(arr);
 
 	// to many or not enough data values
-	sprintf(msg, "loaded number of features: %d", i);
+	sprintf(msg, DEBUGMSG_FEATS_LOADED_NOF, i);
 	spLoggerPrintDebug(msg,__FILE__,__func__,__LINE__);
 
 	if (i != *numOfFeatures || j != 1) {

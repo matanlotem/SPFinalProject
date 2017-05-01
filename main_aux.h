@@ -81,6 +81,7 @@ void destroySPPoint1D(SPPoint **DB, int dim);
  * @param DB - a 2D SPPoint array
  * @param dim - number of 1D SSPoint arrays in DB
  * @param dim2 - dimension of each 1D SSPoint array in DB
+ * 				 asserts is not NULL if DB is not NULL
  */
 void destroySPPoint2D(SPPoint ***DB, int dim, int *dim2);
 

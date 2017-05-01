@@ -56,6 +56,8 @@
 #define ERRORMSG_FEATS_INDEX "Index %d out of range"
 #define ERRORMSG_FEATS_SAVE_OPEN "Could not open %s features file for writing"
 #define INFOMSG_FEATS_SAVE_SUCCESS "Successfully saved image %d features file"
+#define DEBUGMSG_FEATS_EXPECTED_NOF "Expected number of features: %d"
+#define DEBUGMSG_FEATS_LOADED_NOF "Loaded number of features: %d"
 
 #define ERRORMSG_FEATS_GET "Failed extracting/loading image %d features"
 #define ERRORMSG_KDTREE_CREATE "Failed initializing features kd-tree"
