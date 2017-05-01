@@ -47,19 +47,20 @@ int main(int argc, char* argv[]) {
 				if (spShowResults(similarImages, queryFilename, imageProc, config) == -1)
 					break;
 				// new query
+				destroySPPoint1D(queryFeats, queryNumOfFeatures);
 				queryFeats = spQuery(&queryNumOfFeatures, queryFilename, imageProc);
 			}
 		}
 
 		// cleanup
 		if (similarImages) free(similarImages);
-		destroySPPoint1D(queryFeats, queryNumOfFeatures);
 		spKDTreeDestroy(featsTree);
 		spConfigDestroy(config);
-
+		spLoggerDestroy();
 	}
 	catch (...) { // failed creating imageProc object
 		spConfigDestroy(config);
+		spLoggerDestroy();
 		return -1;
 	}
 
