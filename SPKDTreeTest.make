@@ -15,7 +15,7 @@ SPPoint.o: SPPoint.c SPPoint.h
 	$(CC) $(COMP_FLAG) -c $*.c
 SPKDTree.o: SPKDTree.c SPKDTree.h 
 	$(CC) $(COMP_FLAG) -c $*.c
-SPBPriorityQueue.o: SPBPriorityQueue.o SPBPriorityQueue.o
+SPBPriorityQueue.o: SPBPriorityQueue.c SPBPriorityQueue.h
 	$(CC) $(COMP_FLAG) -c $*.c
 SPLogger.o: SPLogger.c SPLogger.h 
 	$(CC) $(COMP_FLAG) -c $*.c
