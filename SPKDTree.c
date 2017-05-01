@@ -312,7 +312,7 @@ double minDistanceSquared(SPPoint* targetPoint, double* highLimit, double* lowLi
  * @param curr - the tree node to free
  */
 void spKDTreeDestroy(SPKDTreeNode* curr){
-    if (curr != NULL && curr->data != NULL) {
+    if (curr != NULL) {
         spPointDestroy(curr->data);
         spKDTreeDestroy(curr->left);
         spKDTreeDestroy(curr->right);
@@ -388,7 +388,7 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
  * Otherwise, 0
  */
 int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages){
-	if(closestImages == NULL || targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1){
+	if(closestImages == NULL || targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1|| spNumOfSimilarImages > numOfImages){
 		spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
 		return -1;
 	}
@@ -429,6 +429,7 @@ int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, S
     }
     int numOfClosestImages = 1; // The number of closest images found, out of a possible spNumOfSimilarImages
     int nextIndex = 0;
+    printf("\n%d: %d, ", 0,imageResults[0]); //MARK
     for(int i = 1; i < numOfImages; i++){ // During this loop, the indices of the spNumOfSimilarImages closest images will be placed in closestImages
         for(nextIndex = numOfClosestImages; nextIndex > 0 && imageResults[i] > imageResults[closestImages[nextIndex-1]];nextIndex--);
         if(nextIndex < spNumOfSimilarImages){ // True if the array is not yet full or if images i is closer than image closestImages[nextIndex]
@@ -438,7 +439,9 @@ int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, S
                 closestImages[changedIndex] = closestImages[changedIndex-1]; // The indices of images that are further away than image i need to be moved along closestPoints
             closestImages[nextIndex] = i;
         }
+        printf("%d: %d, ", i,imageResults[i]); //MARK
     }
+    printf("\n"); //MARK
 
     // Release allocated memory
     spBPQueueDestroy(bpQueue);
@@ -446,5 +449,5 @@ int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, S
     free(imageResults);
     free(imageCheck);
 
-    return 0;
+    return 1;
 }
