@@ -119,7 +119,7 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
     }
 
     // (NULL array or some points have different dimensions than others)
-    spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
+    spLoggerPrintError(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
     return NULL;
 }
 
@@ -161,11 +161,11 @@ SPKDArray* spKDArrayInitPreSorted(SPPoint** data, int** a, int size , int d){
  */
 SPKDArray** spKDArraySplit(SPKDArray* kdArr, int coor){
     if(kdArr == NULL){
-        spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
+        spLoggerPrintError(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
         return NULL;
     }
     if((coor < 1 || coor > kdArr->dim) || kdArr->size < 2){
-        spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
+        spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
         return NULL;
     }
     int n1 = kdArr->size;
@@ -283,7 +283,7 @@ SPPoint** spCopyPointArray(SPPoint** base, int size ){
                 }
             }
             if(iChecker != size){
-				spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
+				spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
                 free(res);
                 return NULL;
             }
@@ -292,7 +292,7 @@ SPPoint** spCopyPointArray(SPPoint** base, int size ){
         spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
         return NULL;
     }
-    spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
+    spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
     return NULL;
 }
 
@@ -320,17 +320,17 @@ int spSortPointArrayByDimension(int** a , SPPoint** data, int size, int d , int*
                 if(i == 0)
                     dim = spPointGetDimension((data[i]));
                 if(spPointGetDimension((data[i])) != dim){
-					spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
+					spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
                     return -1;
                 }
             }
             else{
-                spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
+                spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
                 return -1;
             }
         }
         if(a[d] == NULL){
-            spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
+            spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
             return -1;
         }
         if(tempArray != NULL){

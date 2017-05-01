@@ -2,8 +2,8 @@ CC = gcc
 OBJS = smallSearchTester.o SPKDTree.o SPKDArray.o SPPoint.o SPBPriorityQueue.o SPLogger.o
 EXEC = smallSearchTester
 TESTS_DIR = ./unit_tests
-COMP_FLAG = -std=c99 #-Wall -Wextra \
-#-Werror -pedantic-errors
+COMP_FLAG = -std=c99 -Wall -Wextra \
+-Werror -pedantic-errors
 
 $(EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $@

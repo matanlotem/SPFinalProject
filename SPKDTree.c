@@ -70,7 +70,7 @@ struct kd_tree_node_t {
  */
 SPKDTreeNode* spKDTreeInit(KD_METHOD splitMethod , SPPoint** pointsArray, int pointsArraySize){
 	if(pointsArray == NULL || pointsArraySize < 1){
-        spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
+        spLoggerPrintError(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
 		return NULL;
 	}
 	SPKDArray* kdA = spKDArrayInit(pointsArray, pointsArraySize);
@@ -162,7 +162,7 @@ SPKDTreeNode* spKDTreeInitRecursion(KD_METHOD splitMethod , SPKDArray* kdA, int 
  */
 int kNearestNeighboursTree(SPBPQueue* bpq , SPKDTreeNode* root, SPPoint* targetPoint){
 	if(root == NULL || targetPoint == NULL || bpq == NULL){
-		spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
+		spLoggerPrintError(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
 		return -1;
 	}
     double* lowLimit = (double*) malloc(spPointGetDimension(targetPoint) * sizeof(double)); /* These arrays are used in the recursion to mark limits */
@@ -286,7 +286,7 @@ void kNearestNeighboursRecursion(SPBPQueue* bpq, SPKDTreeNode* curr, SPPoint* ta
  */
 double minDistanceSquared(SPPoint* targetPoint, double* highLimit, double* lowLimit, int* highLimitUse, int* lowLimitUse){
     if(targetPoint == NULL || highLimit == NULL || lowLimit == NULL || highLimitUse == NULL || lowLimitUse == NULL){
-    	spLoggerPrintWarning(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
+    	spLoggerPrintError(ERRORMSG_NULL_ARGS,__FILE__,__func__,__LINE__);
         return 0;
     }
     double res = 0;
@@ -340,12 +340,12 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
             totalSize = totalSize + numOfFeatures[i];
     }
     if(totalSize <1 || mat == NULL){
-        spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
+        spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
         return NULL;
     }
     SPPoint** allPoints = (SPPoint**) malloc(totalSize * sizeof(*allPoints));
     if(allPoints == NULL){
-        spLoggerPrintWarning(ERRORMSG_ALLOCATION,__FILE__,__func__,__LINE__);
+        spLoggerPrintError(ERRORMSG_ALLOCATION,__FILE__,__func__,__LINE__);
         return NULL;
     }
     int k = 0;
@@ -387,7 +387,7 @@ SPKDTreeNode* fullKDTreeCreator(SPPoint*** mat , int numOfImages, int* numOfFeat
  */
 int closestImagesSearch(int kNN, int* closestImages, int spNumOfSimilarImages, SPPoint** targetFeatures, int numOfTargetFeatures, SPKDTreeNode* root, int numOfImages){
 	if(closestImages == NULL || targetFeatures == NULL || root == NULL || numOfTargetFeatures < 1 || numOfImages < 1 || kNN < 1|| spNumOfSimilarImages < 1){
-		spLoggerPrintWarning(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
+		spLoggerPrintError(ERRORMSG_INVALID_ARGS,__FILE__,__func__,__LINE__);
 		return -1;
 	}
 	int* imageResults = (int*) malloc(numOfImages * sizeof(int)); /* imageResults[i] is the number of features image i has that are close to features in targetFeatures. */

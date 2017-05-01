@@ -112,6 +112,7 @@ static bool defaultValConfigTest() {
 	//SP_CONFIG_DEFAULT_LOGGER_LEVEL 3
 	//SP_CONFIG_DEFAULT_LOGGER_FILENAME "stdout"
 
+	spConfigDestroy(config);
 	return true;
 }
 
@@ -142,6 +143,7 @@ static bool valueConfigTest() {
 	ASSERT_TRUE(spConfigGetPCAPath(output, config) == SP_CONFIG_SUCCESS);
 	//ASSERT_TRUE(streq(output,""));
 
+	spConfigDestroy(config);
 	return true;
 }
 

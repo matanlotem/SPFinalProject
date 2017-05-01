@@ -2,8 +2,8 @@ CC = gcc
 OBJS = sp_logger_unit_test.o SPLogger.o
 EXEC = sp_logger_unit_test
 TESTS_DIR = ./unit_tests
-COMP_FLAG = -std=c99 #-Wall -Wextra \
-#-Werror -pedantic-errors
+COMP_FLAG = -std=c99 -Wall -Wextra \
+-Werror -pedantic-errors
 
 $(EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $@
