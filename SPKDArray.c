@@ -47,10 +47,10 @@ struct kd_array_t {
  * Otherwise, the new KD Array is returned
  */
 SPKDArray* spKDArrayInit(SPPoint** arr, int size){
-    int iError = -1; /* Allocation error checker */
-    int d = 0; /* Number of dimensions of each point */
+    int iError = -1; // Allocation error checker
+    int d = 0; // Number of dimensions of each point
     if(size>0 && arr != NULL){
-        for(int i = 0; i<size && iError == -1 ; i++){ /* Check that all points exist and have the same dimension */
+        for(int i = 0; i<size && iError == -1 ; i++){ // Check that all points exist and have the same dimension
             if(arr[i] == NULL){
                 d = 0;
                 iError = 0;
@@ -63,12 +63,13 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
             }
         }
         if(d > 0){
-            int **a = (int**) malloc(d*sizeof(*a)); /* a is the sorted matrix of indexes */
+            int **a = (int**) malloc(d*sizeof(*a)); // a is the sorted matrix of indexes
             iError = -1;
-            if(a == NULL)
+            if(a == NULL) {
             	spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
                 return NULL;
-            int* tempArray = (int*) malloc(size*sizeof(int)); /* tempArray will help in sort */
+            }
+            int* tempArray = (int*) malloc(size*sizeof(int)); // tempArray will help in sort
             if(tempArray == NULL){
                 spLoggerPrintError(ERRORMSG_ALLOCATION, __FILE__, __func__, __LINE__ );
                 free(a);
@@ -82,8 +83,8 @@ SPKDArray* spKDArrayInit(SPPoint** arr, int size){
                 }
                 else{
                     for(int j = 0; j<size; j++)
-                        a[i][j] = j; /* The initial index order before sort is 0,1,...,size-1 in each row */
-                    spSortPointArrayByDimension(a , arr , size, i, tempArray); /* Merge sort of row i */
+                        a[i][j] = j; // The initial index order before sort is 0,1,...,size-1 in each row
+                    spSortPointArrayByDimension(a , arr , size, i, tempArray); // Merge sort of row i
                 }
             }
             free(tempArray);

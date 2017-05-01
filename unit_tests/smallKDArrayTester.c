@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "../SPPoint.h"
 #include "../SPKDArray.h"
+#include "../SPLogger.h"
 
 
 void printKDArray(SPKDArray* kdA){
@@ -28,6 +29,7 @@ void printKDArray(SPKDArray* kdA){
 }
 int main()
 {
+	spLoggerCreate(NULL, SP_LOGGER_ERROR_LEVEL);
     int size1 = 7;
     int dim = 3;
     int index = 1;
@@ -80,6 +82,7 @@ int main()
     spKDArrayDestroy(kdA2[1]);
     free(kdA2);
     free(kdA3);
+    spLoggerDestroy();
     return 0;
 }
 

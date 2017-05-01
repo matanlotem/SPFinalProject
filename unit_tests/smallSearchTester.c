@@ -4,9 +4,11 @@
 #include "../SPKDArray.h"
 #include "../SPBPriorityQueue.h"
 #include "../SPKDTree.h"
+#include "../SPLogger.h"
 
 int main()
 {
+	spLoggerCreate(NULL, SP_LOGGER_ERROR_LEVEL);
     int numOfImages = 4;
     int* numOfFeatures = (int*) malloc(numOfImages*(sizeof(int)));
     numOfFeatures[0] = 3;
@@ -76,6 +78,7 @@ int main()
     spKDTreeDestroy(tIncremental);
     spKDTreeDestroy(tRandom);
     spKDTreeDestroy(tSpread);
+    spLoggerDestroy();
     return 0;
 }
 
