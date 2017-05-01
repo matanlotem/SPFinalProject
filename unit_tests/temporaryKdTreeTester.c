@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "SPPoint.h"
 #include "SPKDArray.h"
-#include "SPBPQ.h"
 #include "SPBPriorityQueue.h"
 #include "SPKDTree.h"
 #include "SPConfig.h"
@@ -417,25 +416,71 @@ int resetFeatureNumbers(int* numOfFeatures){
 int main()
 {
     // first, the maximum sizes for images are defined.
-    int* numOfFeatures = (int*) malloc(numOfImages*(sizeof(int)));
+    int* numOfFeatures = (int*) malloc(5*(sizeof(int)));
     int numOfImages = resetFeatureNumbers(numOfFeatures);
     int kNN = 3;
     int numOfClosest = 5;
     int searchIndex = 0;
     KD_METHOD splitMethod = RANDOM;
 
+    printf("\nTest 1:");
     kNN = 1;
-    numOfFeatures[0] = 7;
-    numOfFeatures[1] = 7;
-    numOfFeatures[2] = 7;
-    numOfFeatures[3] = 7;
-    numOfFeatures[4] = 7;
+    searchIndex = 0;
+    splitMethod = RANDOM;
     treeTesterGood(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
-    numOfImages = resetFeatureNumbers(numOfFeatures);
     treeTesterPoor(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
     numOfImages = resetFeatureNumbers(numOfFeatures);
 
-    closestImagesSearch(2,NULL, 5, m[searchIndex], numOfFeaturesTest[searchIndex], t0, numOfImagesTest);
+    printf("\nTest 2:");
+    kNN = 2;
+    searchIndex = 1;
+    splitMethod = INCREMENTAL;
+    treeTesterGood(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    treeTesterPoor(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    numOfImages = resetFeatureNumbers(numOfFeatures);
+
+    printf("\nTest 3:");
+    kNN = 3;
+    searchIndex = 2;
+    splitMethod = MAX_SPREAD;
+    treeTesterGood(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    treeTesterPoor(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    numOfImages = resetFeatureNumbers(numOfFeatures);
+
+    printf("\nTest 4:");
+    kNN = 4;
+    searchIndex = 3;
+    splitMethod = MAX_SPREAD;
+    treeTesterGood(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    treeTesterPoor(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    numOfImages = resetFeatureNumbers(numOfFeatures);
+
+    printf("\nTest 5:");
+    kNN = 5;
+    searchIndex = 4;
+    splitMethod = MAX_SPREAD;
+    treeTesterGood(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    treeTesterPoor(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    numOfImages = resetFeatureNumbers(numOfFeatures);
+
+    printf("\nTest 6 (point 3 has less features):");
+    kNN = 2;
+    numOfFeatures[3] = 4;
+    searchIndex = 2;
+    splitMethod = MAX_SPREAD;
+    treeTesterGood(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    treeTesterPoor(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    numOfImages = resetFeatureNumbers(numOfFeatures);
+
+    printf("\nTest 7 (point 3 has less features):");
+    kNN = 2;
+    numOfFeatures[3] = 4;
+    searchIndex = 3;
+    splitMethod = MAX_SPREAD;
+    treeTesterGood(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    treeTesterPoor(kNN,  numOfClosest,  splitMethod,  searchIndex, numOfImages, numOfFeatures);
+    numOfImages = resetFeatureNumbers(numOfFeatures);
+
 
     free(numOfFeatures);
     return 0;
