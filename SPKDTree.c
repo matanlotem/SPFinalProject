@@ -103,6 +103,7 @@ SPKDTreeNode* spKDTreeInitRecursion(KD_METHOD splitMethod , SPKDArray* kdA, int 
 		newNode->dim = -1;
 		newNode->val = 0;
 		newNode->data = (spKDArrayGetArray(kdA))[0];
+		spKDArrayDestroy(kdA);
 	}
 	else{
 		int n = spKDArrayGetSize(kdA);
