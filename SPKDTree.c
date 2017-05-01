@@ -313,6 +313,8 @@ double minDistanceSquared(SPPoint* targetPoint, double* highLimit, double* lowLi
  */
 void spKDTreeDestroy(SPKDTreeNode* curr){
     if(curr != NULL){
+	if(curr->data != NULL)
+		spPointDestroy(curr->data);
         spKDTreeDestroy(curr->left);
         spKDTreeDestroy(curr->right);
         free(curr);
