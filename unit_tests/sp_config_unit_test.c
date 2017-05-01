@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "unit_test_util.h" //SUPPORTING MACROS ASSERT_TRUE/ASSERT_FALSE etc..
 #include "../SPConfig.h"
 #include "../SPConsts.h"
@@ -135,34 +136,18 @@ static bool valueConfigTest() {
 	ASSERT_TRUE(msg == SP_CONFIG_SUCCESS);
 
 	char output[STR_LEN];
-	//TODO
 	ASSERT_TRUE(spConfigGetImagePath(output, config, 3) == SP_CONFIG_SUCCESS);
-	//ASSERT_TRUE(streq(output,""));
+	ASSERT_TRUE(strcmp(output,"./images/img3.png") == 0);
 	ASSERT_TRUE(spConfigGetFeaturesPath(output, config, 3) == SP_CONFIG_SUCCESS);
-	//ASSERT_TRUE(streq(output,""));
+	ASSERT_TRUE(strcmp(output,"./images/img3.feats") == 0);
 	ASSERT_TRUE(spConfigGetPCAPath(output, config) == SP_CONFIG_SUCCESS);
-	//ASSERT_TRUE(streq(output,""));
+	ASSERT_TRUE(strcmp(output,"./images/pssca.yml") == 0);
 
 	spConfigDestroy(config);
 	return true;
 }
 
-static bool invalidConfigLineTest() {
-	// no =
-	// invalid arg
-	//TODO
-	return true;
-}
 
-static bool nullArgConfigTest() {
-	//TODO
-	return true;
-}
-
-static bool createLoggerConfigTest() {
-	//TODO
-	return true;
-}
 
 int main() {
 	RUN_TEST(basicConfigTest);
@@ -171,8 +156,5 @@ int main() {
 	RUN_TEST(vaildArgConfigTest);
 	RUN_TEST(defaultValConfigTest);
 	RUN_TEST(valueConfigTest);
-	RUN_TEST(invalidConfigLineTest);
-	RUN_TEST(nullArgConfigTest);
-	RUN_TEST(createLoggerConfigTest);
 	return 0;
 }
