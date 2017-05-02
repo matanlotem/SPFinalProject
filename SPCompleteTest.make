@@ -11,10 +11,10 @@ LIBS=-lopencv_xfeatures2d -lopencv_features2d \
 -lopencv_highgui -lopencv_imgcodecs -lopencv_imgproc -lopencv_core
 
 
-CPP_COMP_FLAG = -std=c++11 #-Wall -Wextra \
+CPP_COMP_FLAG = -std=c++11 -Wall -Wextra \
 -Werror -pedantic-errors -DNDEBUG
 
-C_COMP_FLAG = -std=c99 #-Wall -Wextra \
+C_COMP_FLAG = -std=c99 -Wall -Wextra \
 -Werror -pedantic-errors -DNDEBUG
 
 $(EXEC): $(OBJS)

@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "SPPoint.h"
-#include "SPKDArray.h"
-#include "SPBPriorityQueue.h"
-#include "SPKDTree.h"
-#include "SPConfig.h"
+#include "../SPPoint.h"
+#include "../SPKDArray.h"
+#include "../SPBPriorityQueue.h"
+#include "../SPKDTree.h"
+#include "../SPConfig.h"
 
 /*
 ** This function uses a less efficient method to calculate the kNN closest features to

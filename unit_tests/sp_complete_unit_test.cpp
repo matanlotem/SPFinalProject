@@ -47,7 +47,6 @@ bool spInitTest() {
 
 bool preprocessingTest() {
 	// initialize everything
-	SP_CONFIG_MSG configMsg;
 	SPConfig config = spInitConfigFname(TEST_DIR "myconfig.config");
 	ASSERT_TRUE(config);
 	sp::ImageProc imageProc(config);
@@ -64,7 +63,6 @@ bool preprocessingTest() {
 
 bool queryTest() {
 	// initialize everything
-	SP_CONFIG_MSG configMsg;
 	SPConfig config = spInitConfigFname(TEST_DIR "myconfig.config");
 	ASSERT_TRUE(config);
 	sp::ImageProc imageProc(config);
@@ -95,8 +93,6 @@ bool basicCompleteTest() {
 	ASSERT_TRUE(featsTree);
 
 	// get interesting parameters
-	int numOfImages = spConfigGetNumOfImages(config, &configMsg);
-	ASSERT_TRUE(configMsg == SP_CONFIG_SUCCESS);
 	int numOfSimilarImages = spConfigGetNumOfSimilarImages(config, &configMsg);
 	ASSERT_TRUE(configMsg == SP_CONFIG_SUCCESS);
 	int* similarImages = (int*) malloc(sizeof(int) * numOfSimilarImages);
@@ -187,7 +183,7 @@ int main(int argc, char* argv[]) {
 	RUN_TEST(spInitTest);
 	RUN_TEST(preprocessingTest);
 	RUN_TEST(queryTest);
-	//RUN_TEST(basicCompleteTest);
-	//RUN_TEST(selfImageTest);
+	RUN_TEST(basicCompleteTest);
+	RUN_TEST(selfImageTest);
 	return 0;
 }
